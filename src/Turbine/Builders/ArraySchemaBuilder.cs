@@ -17,15 +17,23 @@ public class ArraySchemaBuilder<TItem> : PropertySchemaBuilder<TItem, ArraySchem
 
     internal override void AddProperty(ObjectProperty property)
     {
-        throw new NotSupportedException(
-            "Adding item-shape properties to an ArraySchemaBuilder is not yet wired. " +
-            "Configure array bounds (MinItems / MaxItems) instead.");
+        Schema.Items ??= new ObjectSchema<TItem>();
+        Schema.Items.Properties.Add(property);
     }
 
     internal override void RemoveProperty(string propertyName)
     {
-        throw new NotSupportedException(
-            "Removing item-shape properties on an ArraySchemaBuilder is not yet wired.");
+        if (Schema.Items is null)
+        {
+            return;
+        }
+        for (var i = Schema.Items.Properties.Count - 1; i >= 0; i--)
+        {
+            if (Schema.Items.Properties[i].Name == propertyName)
+            {
+                Schema.Items.Properties.RemoveAt(i);
+            }
+        }
     }
 
     public ArraySchemaBuilder<TItem> MinItems(int minItems)

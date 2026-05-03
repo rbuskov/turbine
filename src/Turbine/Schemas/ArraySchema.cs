@@ -9,6 +9,7 @@ public class ArraySchema<TItem> : IReferenceTypeSchema<ICollection<TItem>>
     public bool? Nullable { get; set; }
     public int? MinItems { get; set; }
     public int? MaxItems { get; set; }
+    public ObjectSchema<TItem>? Items { get; set; }
 
     public ICollection<TItem> FromJson(JsonElement json)
     {
