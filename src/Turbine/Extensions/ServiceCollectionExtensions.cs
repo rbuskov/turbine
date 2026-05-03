@@ -1,6 +1,8 @@
 using System.Reflection;
+using Microsoft.AspNetCore.OpenApi;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace Turbine;
 
@@ -39,6 +41,9 @@ public static class ServiceCollectionExtensions
 
         var set = TurbineConfigurationSet.GetOrAdd(services);
         services.TryAddSingleton<TurbineSchemaRegistry>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<
+            IConfigureOptions<OpenApiOptions>,
+            ConfigureTurbineOpenApiOptions>());
 
         foreach (var assembly in resolved)
         {
