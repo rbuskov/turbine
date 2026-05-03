@@ -15,6 +15,13 @@ public class ArraySchemaBuilder<TItem> : PropertySchemaBuilder<TItem, ArraySchem
         return this;
     }
 
+    internal override void AddProperty(ObjectProperty property)
+    {
+        throw new NotSupportedException(
+            "Adding item-shape properties to an ArraySchemaBuilder is not yet wired. " +
+            "Configure array bounds (MinItems / MaxItems) instead.");
+    }
+
     public ArraySchemaBuilder<TItem> MinItems(int minItems)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minItems);

@@ -8,4 +8,9 @@ public class ObjectSchemaBuilder<TDomain> : PropertySchemaBuilder<TDomain, Objec
     {
         Schema = schema;
     }
+
+    internal override void AddProperty(ObjectProperty property)
+    {
+        Schema.Properties.Add(property);
+    }
 }

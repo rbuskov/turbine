@@ -9,11 +9,13 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
 {
     internal PropertySchemaBuilder() { }
 
+    internal abstract void AddProperty(ObjectProperty property);
+
     public TSelf AddPropertiesFrom<TSource>(Func<ObjectSchema<TSource>> schema, bool? asRequired = null)
     {
         return (TSelf) this;
     }
-    
+
     public TSelf AddAtomicProperties(bool? asRequired = null)
     {
         return (TSelf) this;
@@ -37,66 +39,108 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<EnumSchemaBuilder<TEnum>>? schema = null)
         where TEnum : struct, Enum
     {
-        return (TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? true,
+            () => new EnumSchema<TEnum>(),
+            s => new EnumSchemaBuilder<TEnum>(s),
+            schema);
     }
 
     // Boolean
     public TSelf Add(
-        Expression<Func<TDomain, bool>> selector, 
+        Expression<Func<TDomain, bool>> selector,
         string? name = null,
         bool? required = null,
         Action<BooleanSchemaBuilder>? schema = null)
     {
-        return (TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? true,
+            () => new BooleanSchema(),
+            s => new BooleanSchemaBuilder(s),
+            schema);
     }
-    
+
     public TSelf Add(
-        Expression<Func<TDomain, bool?>> selector, 
+        Expression<Func<TDomain, bool?>> selector,
         string? name = null,
         bool? required = null,
         Action<BooleanSchemaBuilder>? schema = null)
     {
-        return(TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? false,
+            () => new BooleanSchema(),
+            s => new BooleanSchemaBuilder(s),
+            schema);
     }
-    
+
     // DateTimeOffset
     public TSelf Add(
-        Expression<Func<TDomain, DateTimeOffset>> selector, 
+        Expression<Func<TDomain, DateTimeOffset>> selector,
         string? name = null,
         bool? required = null,
         Action<DateTimeOffsetSchemaBuilder>? schema = null)
     {
-        return (TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? true,
+            () => new DateTimeOffsetSchema(),
+            s => new DateTimeOffsetSchemaBuilder(s),
+            schema);
     }
-    
+
     public TSelf Add(
-        Expression<Func<TDomain, DateTimeOffset?>> selector, 
+        Expression<Func<TDomain, DateTimeOffset?>> selector,
         string? name = null,
         bool? required = null,
         Action<DateTimeOffsetSchemaBuilder>? schema = null)
     {
-        return(TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? false,
+            () => new DateTimeOffsetSchema(),
+            s => new DateTimeOffsetSchemaBuilder(s),
+            schema);
     }
-    
+
     // DateOnly
     public TSelf Add(
-        Expression<Func<TDomain, DateOnly>> selector, 
+        Expression<Func<TDomain, DateOnly>> selector,
         string? name = null,
         bool? required = null,
         Action<DateOnlySchemaBuilder>? schema = null)
     {
-        return (TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? true,
+            () => new DateOnlySchema(),
+            s => new DateOnlySchemaBuilder(s),
+            schema);
     }
-    
+
     public TSelf Add(
-        Expression<Func<TDomain, DateOnly?>> selector, 
+        Expression<Func<TDomain, DateOnly?>> selector,
         string? name = null,
         bool? required = null,
         Action<DateOnlySchemaBuilder>? schema = null)
     {
-        return(TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? false,
+            () => new DateOnlySchema(),
+            s => new DateOnlySchemaBuilder(s),
+            schema);
     }
-    
+
     // String (no string overload, since string and string? are equivalent at runtime)
     public TSelf Add(
         Expression<Func<TDomain, string?>> selector,
@@ -104,7 +148,13 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<StringSchemaBuilder>? schema = null)
     {
-        return(TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? true,
+            () => new StringSchema(),
+            s => new StringSchemaBuilder(s),
+            schema);
     }
 
     // Numeric
@@ -115,9 +165,15 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<NumericSchemaBuilder<TNumber>>? schema = null)
         where TNumber : struct, INumber<TNumber>
     {
-        return (TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? true,
+            () => new NumericSchema<TNumber>(),
+            s => new NumericSchemaBuilder<TNumber>(s),
+            schema);
     }
-    
+
     public TSelf Add<TNumber>(
         Expression<Func<TDomain, TNumber?>> selector,
         string? name = null,
@@ -125,9 +181,15 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<NumericSchemaBuilder<TNumber>>? schema = null)
         where TNumber : struct, INumber<TNumber>
     {
-        return (TSelf) this;
+        return AddValueProperty(
+            selector,
+            name,
+            required ?? false,
+            () => new NumericSchema<TNumber>(),
+            s => new NumericSchemaBuilder<TNumber>(s),
+            schema);
     }
-    
+
     // Object
     public TSelf AddObject<TProperty>(
         Expression<Func<TDomain, TProperty>> selector,
@@ -135,9 +197,9 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<ObjectSchemaBuilder<TProperty>>? schema = null)
     {
-        return(TSelf) this;
+        return (TSelf) this;
     }
-    
+
     // Array
     public TSelf AddArray<TItem>(
         Expression<Func<TDomain, IEnumerable<TItem>>> selector,
@@ -147,7 +209,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
     {
         return (TSelf) this;
     }
-    
+
     // OneOf
     public TSelf AddOneOf<TBase>(
         Expression<Func<TDomain, TBase>> selector,
@@ -157,9 +219,9 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
     {
         return (TSelf) this;
     }
-    
+
     // Custom boolean
-    public TSelf AddCustom( 
+    public TSelf AddCustom(
         string name,
         Func<TDomain, bool> expr,
         bool? required = null,
@@ -170,7 +232,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         return (TSelf) this;
     }
 
-    public TSelf AddCustom( 
+    public TSelf AddCustom(
         string name,
         Func<TDomain, bool?> expr,
         bool? required = null,
@@ -182,7 +244,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
     }
 
     // Custom string
-    public TSelf AddCustom(   
+    public TSelf AddCustom(
         string name,
         Func<TDomain, string?> expr,
         bool? required = null,
@@ -192,9 +254,9 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
     {
         return (TSelf) this;
     }
-    
+
     // Custom numeric
-    public TSelf AddCustom<TNumber>( 
+    public TSelf AddCustom<TNumber>(
         string name,
         Func<TDomain, TNumber> expr,
         bool? required = null,
@@ -205,17 +267,56 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
     {
         return (TSelf) this;
     }
-    
-    public TSelf AddCustom<TNumber>( 
+
+    public TSelf AddCustom<TNumber>(
         string name,
         Func<TDomain, TNumber?> expr,
         bool? required = null,
         Func<TDomain, JsonValue>? toJson = null,
         Action<JsonValue, TDomain>? fromJson = null,
-        Action<NumericSchemaBuilder<TNumber>>? schema = null) 
+        Action<NumericSchemaBuilder<TNumber>>? schema = null)
         where TNumber : struct, INumber<TNumber>
     {
         return (TSelf) this;
     }
 
+    private TSelf AddValueProperty<TProperty, TSchema, TBuilder>(
+        Expression<Func<TDomain, TProperty>> selector,
+        string? name,
+        bool required,
+        Func<TSchema> createSchema,
+        Func<TSchema, TBuilder> createBuilder,
+        Action<TBuilder>? configure)
+        where TSchema : ISchema
+    {
+        var propertyName = name ?? GetPropertyName(selector);
+        var schema = createSchema();
+        if (configure is not null)
+        {
+            configure(createBuilder(schema));
+        }
+        AddProperty(new ObjectProperty
+        {
+            Name = propertyName,
+            Schema = schema,
+            Required = required,
+        });
+        return (TSelf) this;
+    }
+
+    private static string GetPropertyName<TProperty>(Expression<Func<TDomain, TProperty>> selector)
+    {
+        var body = selector.Body;
+        if (body is UnaryExpression unary)
+        {
+            body = unary.Operand;
+        }
+        if (body is MemberExpression member)
+        {
+            return member.Member.Name;
+        }
+        throw new ArgumentException(
+            "Selector must be a property access expression (e.g. p => p.Property).",
+            nameof(selector));
+    }
 }
