@@ -23,9 +23,9 @@ public class SchemaConfigurationBuilder
         return new NumericSchemaBuilder<TNumber>(new NumericSchema<TNumber>());
     }
 
-    public ObjectSchemaBuilder<TDomain> Schema<TDomain>(Expression<Func<ObjectSchema<TDomain>>> propertySelector, string? name = null) 
+    public ObjectSchemaBuilder<TDomain> Schema<TDomain>(Expression<Func<ObjectSchema<TDomain>>> propertySelector, string? name = null)
     {
-        return new ObjectSchemaBuilder<TDomain>();
+        return new ObjectSchemaBuilder<TDomain>(new ObjectSchema<TDomain>());
     }
     
     public ArraySchemaBuilder<TItem> Schema<TItem>(Expression<Func<ArraySchema<TItem>>> propertySelector, string? name = null)
@@ -35,6 +35,6 @@ public class SchemaConfigurationBuilder
     
     public OneOfSchemaBuilder<TBase> Schema<TBase>(Expression<Func<OneOfSchema<TBase>>> propertySelector, string? name = null)
     {
-        return new OneOfSchemaBuilder<TBase>();
+        return new OneOfSchemaBuilder<TBase>(new OneOfSchema<TBase>());
     }
 }
