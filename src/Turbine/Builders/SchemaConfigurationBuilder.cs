@@ -14,7 +14,7 @@ public class SchemaConfigurationBuilder
     
     public StringSchemaBuilder Schema(Expression<Func<StringSchema>> propertySelector, string? name = null)
     {
-        return new StringSchemaBuilder();
+        return new StringSchemaBuilder(new StringSchema());
     }
 
     public NumericSchemaBuilder<TNumber> Schema<TNumber>(Expression<Func<NumericSchema<TNumber>>> propertySelector, string? name = null)
