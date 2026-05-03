@@ -718,4 +718,147 @@ public class ObjectSchemaBuilderTests
         Assert.DoesNotContain(schema.Properties, p => p.Name == "Age");
         Assert.Contains(schema.Properties, p => p.Name == "Name");
     }
+
+    [Fact]
+    public void AddCustom_bool_registers_with_boolean_schema()
+    {
+        var (schema, builder) = Subject();
+
+        builder.AddCustom("HasName", p => !string.IsNullOrEmpty(p.Name));
+
+        var property = Single(schema);
+        Assert.Equal("HasName", property.Name);
+        Assert.IsType<BooleanSchema>(property.Schema);
+        Assert.True(property.Required);
+        Assert.NotNull(property.ValueExpression);
+    }
+
+    [Fact]
+    public void AddCustom_nullable_bool_is_optional_by_default()
+    {
+        var (schema, builder) = Subject();
+
+        builder.AddCustom("MaybeActive", p => (bool?) p.IsActive);
+
+        var property = Single(schema);
+        Assert.IsType<BooleanSchema>(property.Schema);
+        Assert.False(property.Required);
+    }
+
+    [Fact]
+    public void AddCustom_string_registers_with_string_schema()
+    {
+        var (schema, builder) = Subject();
+
+        builder.AddCustom("Display", p => p.Name.ToUpperInvariant());
+
+        var property = Single(schema);
+        Assert.Equal("Display", property.Name);
+        Assert.IsType<StringSchema>(property.Schema);
+        Assert.True(property.Required);
+        Assert.NotNull(property.ValueExpression);
+    }
+
+    [Fact]
+    public void AddCustom_numeric_registers_with_numeric_schema()
+    {
+        var (schema, builder) = Subject();
+
+        builder.AddCustom("DoubleAge", p => p.Age * 2);
+
+        var property = Single(schema);
+        Assert.Equal("DoubleAge", property.Name);
+        Assert.IsType<NumericSchema<int>>(property.Schema);
+        Assert.True(property.Required);
+        Assert.NotNull(property.ValueExpression);
+    }
+
+    [Fact]
+    public void AddCustom_nullable_numeric_is_optional_by_default()
+    {
+        var (schema, builder) = Subject();
+
+        builder.AddCustom("MaybeAge", p => (int?) p.Age);
+
+        var property = Single(schema);
+        Assert.IsType<NumericSchema<int>>(property.Schema);
+        Assert.False(property.Required);
+    }
+
+    [Fact]
+    public void AddCustom_runs_schema_callback()
+    {
+        var (schema, builder) = Subject();
+
+        builder.AddCustom(
+            "Display",
+            p => p.Name,
+            schema: s => s.MinLength(3));
+
+        var stringSchema = Assert.IsType<StringSchema>(Single(schema).Schema);
+        Assert.Equal(3, stringSchema.MinLength);
+    }
+
+    [Fact]
+    public void AddCustom_stores_value_expression_delegate()
+    {
+        var (schema, builder) = Subject();
+
+        Func<Person, string?> expr = p => p.Name;
+        builder.AddCustom("Display", expr);
+
+        Assert.Same(expr, Single(schema).ValueExpression);
+    }
+
+    [Fact]
+    public void AddCustom_stores_optional_toJson_and_fromJson()
+    {
+        var (schema, builder) = Subject();
+
+        Func<Person, string?> expr = p => p.Name;
+        Func<Person, System.Text.Json.Nodes.JsonValue> toJson = p => System.Text.Json.Nodes.JsonValue.Create(p.Name)!;
+        Action<System.Text.Json.Nodes.JsonValue, Person> fromJson = (j, p) => p.Name = j.GetValue<string>();
+
+        builder.AddCustom("Display", expr, toJson: toJson, fromJson: fromJson);
+
+        var property = Single(schema);
+        Assert.Same(toJson, property.ToJson);
+        Assert.Same(fromJson, property.FromJson);
+    }
+
+    [Fact]
+    public void AddCustom_can_override_required()
+    {
+        var (schema, builder) = Subject();
+
+        builder.AddCustom("Optional", p => p.Name, required: false);
+
+        Assert.False(Single(schema).Required);
+    }
+
+    [Fact]
+    public void AddCustom_throws_on_null_name()
+    {
+        var (_, builder) = Subject();
+
+        Assert.Throws<ArgumentNullException>(() => builder.AddCustom(null!, (Person p) => p.Name));
+    }
+
+    [Fact]
+    public void AddCustom_throws_on_null_expression()
+    {
+        var (_, builder) = Subject();
+
+        Assert.Throws<ArgumentNullException>(() => builder.AddCustom("Display", (Func<Person, string?>) null!));
+    }
+
+    [Fact]
+    public void AddCustom_returns_same_builder_for_chaining()
+    {
+        var (_, builder) = Subject();
+
+        Assert.Same(builder, builder.AddCustom("A", p => p.Name));
+        Assert.Same(builder, builder.AddCustom("B", p => p.Age));
+        Assert.Same(builder, builder.AddCustom("C", p => p.IsActive));
+    }
 }

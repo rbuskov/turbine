@@ -336,7 +336,15 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<JsonValue, TDomain>? fromJson = null,
         Action<BooleanSchemaBuilder>? schema = null)
     {
-        return (TSelf) this;
+        return AddCustomProperty(
+            name,
+            expr,
+            required ?? true,
+            toJson,
+            fromJson,
+            () => new BooleanSchema(),
+            s => new BooleanSchemaBuilder(s),
+            schema);
     }
 
     public TSelf AddCustom(
@@ -347,7 +355,15 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<JsonValue, TDomain>? fromJson = null,
         Action<BooleanSchemaBuilder>? schema = null)
     {
-        return (TSelf) this;
+        return AddCustomProperty(
+            name,
+            expr,
+            required ?? false,
+            toJson,
+            fromJson,
+            () => new BooleanSchema(),
+            s => new BooleanSchemaBuilder(s),
+            schema);
     }
 
     // Custom string
@@ -359,7 +375,15 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<JsonValue, TDomain>? fromJson = null,
         Action<StringSchemaBuilder>? schema = null)
     {
-        return (TSelf) this;
+        return AddCustomProperty(
+            name,
+            expr,
+            required ?? true,
+            toJson,
+            fromJson,
+            () => new StringSchema(),
+            s => new StringSchemaBuilder(s),
+            schema);
     }
 
     // Custom numeric
@@ -367,12 +391,20 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         string name,
         Func<TDomain, TNumber> expr,
         bool? required = null,
-        NumericSchemaBuilder<TNumber>? schema = null,
         Func<TDomain, JsonValue>? toJson = null,
-        Action<JsonValue, TDomain>? fromJson = null)
+        Action<JsonValue, TDomain>? fromJson = null,
+        Action<NumericSchemaBuilder<TNumber>>? schema = null)
         where TNumber : struct, INumber<TNumber>
     {
-        return (TSelf) this;
+        return AddCustomProperty(
+            name,
+            expr,
+            required ?? true,
+            toJson,
+            fromJson,
+            () => new NumericSchema<TNumber>(),
+            s => new NumericSchemaBuilder<TNumber>(s),
+            schema);
     }
 
     public TSelf AddCustom<TNumber>(
@@ -384,6 +416,44 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<NumericSchemaBuilder<TNumber>>? schema = null)
         where TNumber : struct, INumber<TNumber>
     {
+        return AddCustomProperty(
+            name,
+            expr,
+            required ?? false,
+            toJson,
+            fromJson,
+            () => new NumericSchema<TNumber>(),
+            s => new NumericSchemaBuilder<TNumber>(s),
+            schema);
+    }
+
+    private TSelf AddCustomProperty<TProperty, TSchema, TBuilder>(
+        string name,
+        Func<TDomain, TProperty> expr,
+        bool required,
+        Func<TDomain, JsonValue>? toJson,
+        Action<JsonValue, TDomain>? fromJson,
+        Func<TSchema> createSchema,
+        Func<TSchema, TBuilder> createBuilder,
+        Action<TBuilder>? configure)
+        where TSchema : ISchema
+    {
+        ArgumentNullException.ThrowIfNull(name);
+        ArgumentNullException.ThrowIfNull(expr);
+        var schema = createSchema();
+        if (configure is not null)
+        {
+            configure(createBuilder(schema));
+        }
+        AddProperty(new ObjectProperty
+        {
+            Name = name,
+            Schema = schema,
+            Required = required,
+            ValueExpression = expr,
+            ToJson = toJson,
+            FromJson = fromJson,
+        });
         return (TSelf) this;
     }
 
