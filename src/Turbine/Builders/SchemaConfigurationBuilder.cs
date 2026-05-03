@@ -30,7 +30,7 @@ public class SchemaConfigurationBuilder
     
     public ArraySchemaBuilder<TItem> Schema<TItem>(Expression<Func<ArraySchema<TItem>>> propertySelector, string? name = null)
     {
-        return new ArraySchemaBuilder<TItem>();
+        return new ArraySchemaBuilder<TItem>(new ArraySchema<TItem>());
     }
     
     public OneOfSchemaBuilder<TBase> Schema<TBase>(Expression<Func<OneOfSchema<TBase>>> propertySelector, string? name = null)

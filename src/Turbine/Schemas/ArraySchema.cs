@@ -6,8 +6,8 @@ public class ArraySchema<TItem> : IReferenceTypeSchema<ICollection<TItem>>
 {
     internal ArraySchema() { }
 
-    public int MinItems { get; set; }
-    public int MaxItems { get; set; }
+    public int? MinItems { get; set; }
+    public int? MaxItems { get; set; }
 
     public ICollection<TItem> FromJson(JsonElement json)
     {
