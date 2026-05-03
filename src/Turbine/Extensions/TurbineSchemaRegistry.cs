@@ -37,7 +37,6 @@ internal sealed class TurbineSchemaRegistry
             {
                 configuration.Configure(new SchemaConfigurationBuilder());
             }
-            ctx.Configured.Add(configuration);
         }
 
         if (ctx.Deferred.Count > 0)

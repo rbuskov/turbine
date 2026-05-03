@@ -157,6 +157,16 @@ public class ServiceCollectionExtensionsTests
     }
 
     [Fact]
+    public void AddTurbine_throws_when_no_assemblies_passed_and_entry_assembly_is_null()
+    {
+        var services = new ServiceCollection();
+
+        var ex = Assert.Throws<InvalidOperationException>(
+            () => ServiceCollectionExtensions.AddTurbineCore(services, [], () => null));
+        Assert.Contains("entry assembly", ex.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
     public void AddTurbine_with_empty_params_falls_back_to_entry_assembly()
     {
         var services = new ServiceCollection();

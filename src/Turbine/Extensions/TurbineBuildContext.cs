@@ -16,8 +16,6 @@ internal sealed class TurbineBuildContext : IDisposable
 
     public Dictionary<ISchema, SchemaOwner> SchemaOwners { get; } = new(ReferenceEqualityComparer.Instance);
 
-    public HashSet<SchemaConfiguration> Configured { get; } = new();
-
     public List<DeferredOperation> Deferred { get; } = new();
 
     public Dictionary<SchemaConfiguration, HashSet<SchemaConfiguration>> Edges { get; } = new();

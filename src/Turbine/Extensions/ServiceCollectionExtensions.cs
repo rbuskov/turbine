@@ -7,6 +7,12 @@ namespace Turbine;
 public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddTurbine(this IServiceCollection services, params Assembly[] assemblies)
+        => AddTurbineCore(services, assemblies, Assembly.GetEntryAssembly);
+
+    internal static IServiceCollection AddTurbineCore(
+        IServiceCollection services,
+        Assembly[] assemblies,
+        Func<Assembly?> entryAssemblyResolver)
     {
         ArgumentNullException.ThrowIfNull(services);
         ArgumentNullException.ThrowIfNull(assemblies);
@@ -24,7 +30,7 @@ public static class ServiceCollectionExtensions
         var resolved = assemblies.Length == 0
             ? new[]
             {
-                Assembly.GetEntryAssembly()
+                entryAssemblyResolver()
                 ?? throw new InvalidOperationException(
                     "AddTurbine requires an entry assembly to discover SchemaConfiguration subclasses; " +
                     "pass one or more assemblies explicitly when called from a context without an entry assembly."),
