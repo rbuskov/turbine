@@ -36,6 +36,14 @@ public class ArraySchemaBuilder<TItem> : PropertySchemaBuilder<TItem, ArraySchem
         }
     }
 
+    internal override int PropertyCount => Schema.Items?.Properties.Count ?? 0;
+
+    internal override void InsertProperty(int index, ObjectProperty property)
+    {
+        Schema.Items ??= new ObjectSchema<TItem>();
+        Schema.Items.Properties.Insert(index, property);
+    }
+
     public ArraySchemaBuilder<TItem> MinItems(int minItems)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minItems);

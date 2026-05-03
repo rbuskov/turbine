@@ -24,4 +24,11 @@ public class ObjectSchemaBuilder<TDomain> : PropertySchemaBuilder<TDomain, Objec
             }
         }
     }
+
+    internal override int PropertyCount => Schema.Properties.Count;
+
+    internal override void InsertProperty(int index, ObjectProperty property)
+    {
+        Schema.Properties.Insert(index, property);
+    }
 }

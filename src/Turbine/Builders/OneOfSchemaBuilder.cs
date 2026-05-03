@@ -36,12 +36,22 @@ public class OneOfSchemaBuilder<TBase>
     {
         ArgumentNullException.ThrowIfNull(schema);
         var source = schema();
+        var ctx = TurbineBuildContext.Current;
+        if (ctx is not null && ctx.TryDefer(source, () => ApplyAddMappingsFrom(source, asRequired)))
+        {
+            return this;
+        }
+        ApplyAddMappingsFrom(source, asRequired);
+        return this;
+    }
+
+    private void ApplyAddMappingsFrom<TSource>(OneOfSchema<TSource> source, bool? asRequired)
+    {
         foreach (var (type, mapping) in source.Mappings)
         {
             var entry = asRequired is null ? mapping : CopyWithRequired(mapping, asRequired.Value);
             Schema.AddMapping(type, entry);
         }
-        return this;
     }
 
     private static IObjectSchema CopyWithRequired(IObjectSchema source, bool required)

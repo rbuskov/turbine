@@ -16,6 +16,14 @@ public static class WebApplicationExtensions
             ?? throw new InvalidOperationException(
                 "MapTurbine requires AddTurbine to be called on the service collection before the host is built.");
 
+        if (set.Types.Count == 0)
+        {
+            throw new InvalidOperationException(
+                "MapTurbine found no SchemaConfiguration subclasses to initialize. " +
+                "Ensure AddTurbine is called with one or more assemblies that contain " +
+                "concrete public SchemaConfiguration subclasses.");
+        }
+
         var configurations = new List<SchemaConfiguration>(set.Types.Count);
         foreach (var type in set.Types)
         {

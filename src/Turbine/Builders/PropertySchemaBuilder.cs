@@ -14,10 +14,29 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
 
     internal abstract void RemoveProperty(string propertyName);
 
+    internal abstract int PropertyCount { get; }
+
+    internal abstract void InsertProperty(int index, ObjectProperty property);
+
     public TSelf AddPropertiesFrom<TSource>(Func<ObjectSchema<TSource>> schema, bool? asRequired = null)
     {
         ArgumentNullException.ThrowIfNull(schema);
         var source = schema();
+        var ctx = TurbineBuildContext.Current;
+        if (ctx is not null)
+        {
+            var insertionIndex = PropertyCount;
+            if (ctx.TryDefer(source, () => ApplyAddPropertiesFromAt(insertionIndex, source, asRequired)))
+            {
+                return (TSelf) this;
+            }
+        }
+        ApplyAddPropertiesFrom(source, asRequired);
+        return (TSelf) this;
+    }
+
+    private void ApplyAddPropertiesFrom<TSource>(ObjectSchema<TSource> source, bool? asRequired)
+    {
         foreach (var property in source.Properties)
         {
             AddProperty(new ObjectProperty
@@ -27,7 +46,21 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
                 Required = asRequired ?? property.Required,
             });
         }
-        return (TSelf) this;
+    }
+
+    private void ApplyAddPropertiesFromAt<TSource>(int startIndex, ObjectSchema<TSource> source, bool? asRequired)
+    {
+        var index = startIndex;
+        foreach (var property in source.Properties)
+        {
+            InsertProperty(index, new ObjectProperty
+            {
+                Name = property.Name,
+                Schema = property.Schema,
+                Required = asRequired ?? property.Required,
+            });
+            index++;
+        }
     }
 
     public TSelf AddAtomicProperties(bool? asRequired = null)

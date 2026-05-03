@@ -24,6 +24,13 @@ public class PropertySchemaBuilderTests
         {
             Removed.Add(propertyName);
         }
+
+        internal override int PropertyCount => Added.Count;
+
+        internal override void InsertProperty(int index, ObjectProperty property)
+        {
+            Added.Insert(index, property);
+        }
     }
 
     [Fact]

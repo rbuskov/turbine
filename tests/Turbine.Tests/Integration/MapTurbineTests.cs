@@ -86,4 +86,14 @@ public class MapTurbineTests
         WebApplication app = null!;
         Assert.Throws<ArgumentNullException>(() => app.MapTurbine());
     }
+
+    [Fact]
+    public void MapTurbine_throws_when_no_SchemaConfiguration_subclasses_were_discovered()
+    {
+        // CoreLib has no SchemaConfiguration subclasses.
+        var app = BuildApp(b => b.Services.AddTurbine(typeof(string).Assembly));
+
+        var ex = Assert.Throws<InvalidOperationException>(() => app.MapTurbine());
+        Assert.Contains("SchemaConfiguration", ex.Message, StringComparison.Ordinal);
+    }
 }
