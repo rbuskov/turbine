@@ -16,7 +16,7 @@ public class PersonnelSchemas : SchemaConfiguration
     
     private ObjectSchema<ServiceMember> ServiceMemberDetails { get; set; } = null!;
     
-    public override void Configure(SchemaConfigurator builder)
+    public override void Configure(SchemaConfigurationBuilder builder)
     {
         builder.Schema(() => Summary)
             .Add(p => p.Id)
@@ -51,7 +51,7 @@ public class PersonnelSchemas : SchemaConfiguration
         builder.Schema(() => Patch).AddMappingsFrom(() => Create, asRequired: false);
     }
 
-    private void ConfigureDetails(SchemaConfigurator builder)
+    private void ConfigureDetails(SchemaConfigurationBuilder builder)
     {
         builder.Schema(() => ServiceMemberDetails)
             .AddPropertiesFrom(() => Summary)

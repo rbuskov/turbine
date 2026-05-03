@@ -49,7 +49,7 @@ specification cannot drift apart.
                                │
 ┌──────────────────────────────▼───────────────────────────────────┐
 │  SchemaConfiguration  (groups related schemas; one or more)      │
-│    Configure(SchemaConfigurator builder) { ... fluent DSL ... }  │
+│    Configure(SchemaConfigurationBuilder builder) { fluent DSL }  │
 └──────────────────────────────┬───────────────────────────────────┘
                                │  builds
 ┌──────────────────────────────▼───────────────────────────────────┐
@@ -86,9 +86,9 @@ plus a map from discriminator values to `IObjectSchema` mappings.
 
 The fluent DSL lives in a separate set of types so the schemas themselves stay
 pure data. Authors subclass `SchemaConfiguration`, declare schema-typed
-properties, and override `Configure(SchemaConfigurator builder)`:
+properties, and override `Configure(SchemaConfigurationBuilder builder)`:
 
-- `SchemaConfigurator` exposes `Schema(() => Property)` overloads that return
+- `SchemaConfigurationBuilder` exposes `Schema(() => Property)` overloads that return
   the matching builder.
 - `PropertySchemaBuilder<TDomain, TSelf>` is the shared base for object-like
   builders. It exposes `Add(...)` overloads for every supported value-type

@@ -13,7 +13,7 @@ public class StarshipSchemas : SchemaConfiguration
     public ObjectSchema<Starship> Update { get; set; } = null!;
     public ObjectSchema<Starship> Patch { get; set; } = null!;
 
-    public override void Configure(SchemaConfigurator builder)
+    public override void Configure(SchemaConfigurationBuilder builder)
     {
         builder.Schema(() => Details)
             .Add(s => s.Registry)

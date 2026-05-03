@@ -3,9 +3,9 @@ using System.Numerics;
 
 namespace Turbine;
 
-public class SchemaConfigurator
+public class SchemaConfigurationBuilder
 {
-    internal SchemaConfigurator() { }
+    internal SchemaConfigurationBuilder() { }
 
     public BooleanSchemaBuilder Schema(Expression<Func<BooleanSchema>> propertySelector, string? name = null)
     {
