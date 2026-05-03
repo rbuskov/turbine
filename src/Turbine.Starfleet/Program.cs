@@ -3,8 +3,9 @@ using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Turbine;
-using Turbine.Starfleet;
 using Turbine.Starfleet.Database;
+using Turbine.Starfleet.Resources.Personnel;
+using Turbine.Starfleet.Resources.Starships;
 using Turbine.Starfleet.Types;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -28,6 +29,8 @@ var app = builder.Build();
 
 app.SeedDatabase();
 
+app.MapPersonnelEndpoints();
+app.MapStarshipEndpoints();
 app.MapTurbine();
 app.MapOpenApi();
 app.MapScalarApiReference();
