@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Turbine;
 using Turbine.Starfleet.Database;
 
 namespace Turbine.Starfleet.Resources.Personnel.Handlers;
@@ -12,7 +13,15 @@ public class CreatePersonnelHandler(PersonnelSchemas schemas, StarfleetDbContext
 {
     public async Task<IResult> Create(JsonElement body)
     {
-        var personnel = schemas.Create.FromJson(body);
+        Entities.Personnel personnel;
+        try
+        {
+            personnel = schemas.Create.FromJson(body);
+        }
+        catch (TurbineBindingException ex)
+        {
+            return TypedResults.BadRequest(new { error = ex.Message });
+        }
 
         await db.Personnel.AddAsync(personnel);
         await db.SaveChangesAsync();

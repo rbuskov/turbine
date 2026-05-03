@@ -26,18 +26,34 @@ public class OneOfSchema<TBase> : IReferenceTypeSchema<TBase>
 
     public TBase FromJson(JsonElement json)
     {
-        // Todo: Resolve schema from discriminator value in json
-        throw new NotImplementedException();
+        if (json.ValueKind == JsonValueKind.Null || json.ValueKind == JsonValueKind.Undefined)
+        {
+            return default!;
+        }
+        return (TBase) SchemaBinder.NodeToValue(this, json, typeof(TBase))!;
     }
 
     public void FromJson(JsonElement json, TBase value)
     {
-        // Todo: Resolve schema from discriminator value in json
-        throw new NotImplementedException();
+        if (value is null)
+        {
+            return;
+        }
+        var (mapping, _, _) = SchemaBinder.ResolveOneOfMapping(this, value.GetType().Name);
+        if (mapping is null)
+        {
+            throw new InvalidOperationException(
+                $"OneOf has no mapping for runtime type '{value.GetType().Name}'.");
+        }
+        SchemaBinder.PopulateInstance(mapping, json, value);
     }
 
     public JsonElement ToJson(TBase instance)
     {
-        throw new NotImplementedException();
+        if (instance is null)
+        {
+            return SchemaBinder.NodeToElement(null);
+        }
+        return SchemaBinder.NodeToElement(SchemaBinder.ValueToNode(this, instance));
     }
 }

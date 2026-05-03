@@ -10,11 +10,11 @@ public class DateTimeOffsetSchema : IValueTypeSchema<DateTimeOffset>
 
     public DateTimeOffset FromJson(JsonElement json)
     {
-        throw new NotImplementedException();
+        return (DateTimeOffset) SchemaBinder.NodeToValue(this, json, typeof(DateTimeOffset))!;
     }
-    
+
     public JsonElement ToJson(DateTimeOffset value)
     {
-        throw new NotImplementedException();
+        return SchemaBinder.NodeToElement(SchemaBinder.ValueToNode(this, value));
     }
 }

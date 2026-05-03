@@ -15,11 +15,11 @@ public class StringSchema : IValueTypeSchema<string>
 
     public string FromJson(JsonElement json)
     {
-        throw new NotImplementedException();
+        return (string?) SchemaBinder.NodeToValue(this, json, typeof(string)) ?? string.Empty;
     }
-    
+
     public JsonElement ToJson(string value)
     {
-        throw new NotImplementedException();
+        return SchemaBinder.NodeToElement(SchemaBinder.ValueToNode(this, value));
     }
 }

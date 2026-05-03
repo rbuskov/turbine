@@ -11,11 +11,11 @@ public class EnumSchema<TEnum> : IValueTypeSchema<TEnum>
 
     public TEnum FromJson(JsonElement json)
     {
-        throw new NotImplementedException();
+        return (TEnum) SchemaBinder.NodeToValue(this, json, typeof(TEnum))!;
     }
-    
+
     public JsonElement ToJson(TEnum value)
     {
-        throw new NotImplementedException();
+        return SchemaBinder.NodeToElement(SchemaBinder.ValueToNode(this, value));
     }
 }

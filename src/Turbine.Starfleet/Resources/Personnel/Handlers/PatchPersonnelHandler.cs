@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Turbine;
 using Turbine.Starfleet.Database;
 
 namespace Turbine.Starfleet.Resources.Personnel.Handlers;
@@ -24,7 +25,14 @@ public class PatchPersonnelHandler(PersonnelSchemas schemas, StarfleetDbContext 
             return TypedResults.NotFound();
         }
 
-        schemas.Patch.FromJson(body, personnel);
+        try
+        {
+            schemas.Patch.FromJson(body, personnel);
+        }
+        catch (TurbineBindingException ex)
+        {
+            return TypedResults.BadRequest(new { error = ex.Message });
+        }
 
         await db.SaveChangesAsync();
 

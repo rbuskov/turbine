@@ -17,11 +17,11 @@ public class NumericSchema<TNumber> : IValueTypeSchema<TNumber>
 
     public TNumber FromJson(JsonElement json)
     {
-        throw new NotImplementedException();
+        return (TNumber) SchemaBinder.NodeToValue(this, json, typeof(TNumber))!;
     }
-    
+
     public JsonElement ToJson(TNumber value)
     {
-        throw new NotImplementedException();
+        return SchemaBinder.NodeToElement(SchemaBinder.ValueToNode(this, value));
     }
 }

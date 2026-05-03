@@ -67,6 +67,7 @@ public class OneOfSchemaBuilder<TBase>
                 ValueExpression = property.ValueExpression,
                 ToJson = property.ToJson,
                 FromJson = property.FromJson,
+                Member = property.Member,
             });
         }
         return copy;

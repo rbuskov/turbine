@@ -23,7 +23,7 @@ builder.Services.Scan(scan =>
         .WithScopedLifetime());
 
 builder.Services.AddOpenApi();
-builder.Services.AddTurbine();
+builder.Services.AddTurbine(typeof(Program).Assembly);
 
 var app = builder.Build();
 

@@ -10,12 +10,11 @@ public class BooleanSchema : IValueTypeSchema<bool>
 
     public bool FromJson(JsonElement json)
     {
-        throw new NotImplementedException();
+        return (bool) (SchemaBinder.NodeToValue(this, json, typeof(bool)) ?? false);
     }
 
     public JsonElement ToJson(bool value)
     {
-        throw new NotImplementedException();
+        return SchemaBinder.NodeToElement(SchemaBinder.ValueToNode(this, value));
     }
-
 }

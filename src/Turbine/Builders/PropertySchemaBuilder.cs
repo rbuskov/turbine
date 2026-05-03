@@ -39,12 +39,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
     {
         foreach (var property in source.Properties)
         {
-            AddProperty(new ObjectProperty
-            {
-                Name = property.Name,
-                Schema = property.Schema,
-                Required = asRequired ?? property.Required,
-            });
+            AddProperty(ClonePropertyForReuse(property, asRequired));
         }
     }
 
@@ -53,14 +48,23 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         var index = startIndex;
         foreach (var property in source.Properties)
         {
-            InsertProperty(index, new ObjectProperty
-            {
-                Name = property.Name,
-                Schema = property.Schema,
-                Required = asRequired ?? property.Required,
-            });
+            InsertProperty(index, ClonePropertyForReuse(property, asRequired));
             index++;
         }
+    }
+
+    private static ObjectProperty ClonePropertyForReuse(ObjectProperty property, bool? asRequired)
+    {
+        return new ObjectProperty
+        {
+            Name = property.Name,
+            Schema = property.Schema,
+            Required = asRequired ?? property.Required,
+            ValueExpression = property.ValueExpression,
+            ToJson = property.ToJson,
+            FromJson = property.FromJson,
+            Member = property.Member,
+        };
     }
 
     public TSelf AddAtomicProperties(bool? asRequired = null)
@@ -78,6 +82,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
                 Name = property.Name,
                 Schema = atomic.Value.Schema,
                 Required = asRequired ?? atomic.Value.DefaultRequired,
+                Member = property,
             });
         }
         return (TSelf) this;
@@ -499,7 +504,8 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<TBuilder>? configure)
         where TSchema : ISchema
     {
-        var propertyName = name ?? GetPropertyName(selector);
+        var member = TryGetPropertyInfo(selector);
+        var propertyName = name ?? member?.Name ?? GetPropertyName(selector);
         var schema = createSchema();
         if (configure is not null)
         {
@@ -510,8 +516,23 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
             Name = propertyName,
             Schema = schema,
             Required = required,
+            Member = member,
         });
         return (TSelf) this;
+    }
+
+    private static PropertyInfo? TryGetPropertyInfo<TProperty>(Expression<Func<TDomain, TProperty>> selector)
+    {
+        var body = selector.Body;
+        if (body is UnaryExpression unary)
+        {
+            body = unary.Operand;
+        }
+        if (body is MemberExpression member && member.Member is PropertyInfo property)
+        {
+            return property;
+        }
+        return null;
     }
 
     private static string GetPropertyName<TProperty>(Expression<Func<TDomain, TProperty>> selector)

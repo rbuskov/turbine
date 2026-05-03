@@ -10,11 +10,11 @@ public class DateOnlySchema : IValueTypeSchema<DateOnly>
 
     public DateOnly FromJson(JsonElement json)
     {
-        throw new NotImplementedException();
+        return (DateOnly) SchemaBinder.NodeToValue(this, json, typeof(DateOnly))!;
     }
-    
+
     public JsonElement ToJson(DateOnly value)
     {
-        throw new NotImplementedException();
+        return SchemaBinder.NodeToElement(SchemaBinder.ValueToNode(this, value));
     }
 }
