@@ -6,6 +6,8 @@ public class DateOnlySchema : IValueTypeSchema<DateOnly>
 {
     internal DateOnlySchema() { }
 
+    public bool? Nullable { get; set; }
+
     public DateOnly FromJson(JsonElement json)
     {
         throw new NotImplementedException();
