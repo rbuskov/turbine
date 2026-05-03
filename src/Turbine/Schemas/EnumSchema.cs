@@ -7,6 +7,8 @@ public class EnumSchema<TEnum> : IValueTypeSchema<TEnum>
 {
     internal EnumSchema() { }
 
+    public bool? Nullable { get; set; }
+
     public TEnum FromJson(JsonElement json)
     {
         throw new NotImplementedException();

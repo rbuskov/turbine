@@ -30,11 +30,12 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
     }
 
     // Enum
-    public TSelf Add(
-        Expression<Func<TDomain, Enum>> selector, 
+    public TSelf Add<TEnum>(
+        Expression<Func<TDomain, TEnum>> selector,
         string? name = null,
         bool? required = null,
-        Action<EnumSchemaBuilder>? schema = null) // Todo: EnumSchemaBuilder
+        Action<EnumSchemaBuilder<TEnum>>? schema = null)
+        where TEnum : struct, Enum
     {
         return (TSelf) this;
     }
