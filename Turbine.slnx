@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/Samples/">
+    <Project Path="src\Turbine.Starfleet\Turbine.Starfleet.csproj" />
+    <Project Path="tests\Turbine.Starfleet.Tests\Turbine.Starfleet.Tests.csproj" />
+  </Folder>
+  <Project Path="src/Turbine/Turbine.csproj" />
+  <Project Path="tests/Turbine.Tests/Turbine.Tests.csproj" />
+</Solution>
