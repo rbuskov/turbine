@@ -20,7 +20,7 @@ public class SchemaConfigurationBuilder
     public NumericSchemaBuilder<TNumber> Schema<TNumber>(Expression<Func<NumericSchema<TNumber>>> propertySelector, string? name = null)
         where TNumber : struct, INumber<TNumber>
     {
-        return new NumericSchemaBuilder<TNumber> ();
+        return new NumericSchemaBuilder<TNumber>(new NumericSchema<TNumber>());
     }
 
     public ObjectSchemaBuilder<TDomain> Schema<TDomain>(Expression<Func<ObjectSchema<TDomain>>> propertySelector, string? name = null) 

@@ -9,7 +9,9 @@ public class NumericSchema<TNumber> : IValueTypeSchema<TNumber>
     internal NumericSchema() { }
 
     public TNumber? Minimum { get; set; }
+    public TNumber? ExclusiveMinimum { get; set; }
     public TNumber? Maximum { get; set; }
+    public TNumber? ExclusiveMaximum { get; set; }
     public TNumber? MultipleOf { get; set; }
 
     public TNumber FromJson(JsonElement json)
