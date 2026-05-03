@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Numerics;
+using System.Reflection;
 using System.Text.Json.Nodes;
 
 namespace Turbine;
@@ -31,7 +32,79 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
 
     public TSelf AddAtomicProperties(bool? asRequired = null)
     {
+        var properties = typeof(TDomain).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+        foreach (var property in properties)
+        {
+            var atomic = TryCreateAtomicSchema(property.PropertyType);
+            if (atomic is null)
+            {
+                continue;
+            }
+            AddProperty(new ObjectProperty
+            {
+                Name = property.Name,
+                Schema = atomic.Value.Schema,
+                Required = asRequired ?? atomic.Value.DefaultRequired,
+            });
+        }
         return (TSelf) this;
+    }
+
+    private static (ISchema Schema, bool DefaultRequired)? TryCreateAtomicSchema(Type propertyType)
+    {
+        var underlying = System.Nullable.GetUnderlyingType(propertyType);
+        var actualType = underlying ?? propertyType;
+        var defaultRequired = underlying is null;
+
+        if (actualType == typeof(string))
+        {
+            return (new StringSchema(), true);
+        }
+        if (actualType == typeof(bool))
+        {
+            return (new BooleanSchema(), defaultRequired);
+        }
+        if (actualType == typeof(DateOnly))
+        {
+            return (new DateOnlySchema(), defaultRequired);
+        }
+        if (actualType == typeof(DateTimeOffset))
+        {
+            return (new DateTimeOffsetSchema(), defaultRequired);
+        }
+        if (actualType.IsEnum)
+        {
+            var schema = (ISchema) Activator.CreateInstance(
+                typeof(EnumSchema<>).MakeGenericType(actualType),
+                nonPublic: true)!;
+            return (schema, defaultRequired);
+        }
+        if (IsNumeric(actualType))
+        {
+            var schema = (ISchema) Activator.CreateInstance(
+                typeof(NumericSchema<>).MakeGenericType(actualType),
+                nonPublic: true)!;
+            return (schema, defaultRequired);
+        }
+        return null;
+    }
+
+    private static bool IsNumeric(Type type)
+    {
+        if (!type.IsValueType)
+        {
+            return false;
+        }
+        foreach (var iface in type.GetInterfaces())
+        {
+            if (iface.IsGenericType
+                && iface.GetGenericTypeDefinition() == typeof(INumber<>)
+                && iface.GenericTypeArguments[0] == type)
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public TSelf Remove<TProperty>(Expression<Func<TDomain, TProperty?>> selector)

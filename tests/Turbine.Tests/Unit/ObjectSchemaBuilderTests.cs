@@ -543,4 +543,179 @@ public class ObjectSchemaBuilderTests
         Assert.Same(builder, builder.Remove(p => p.Name));
         Assert.Same(builder, builder.Remove("Anything"));
     }
+
+    private sealed class Atomics
+    {
+        public string Name { get; set; } = "";
+        public int Age { get; set; }
+        public int? OptionalAge { get; set; }
+        public bool IsActive { get; set; }
+        public bool? IsVerified { get; set; }
+        public DateOnly Birthday { get; set; }
+        public DateOnly? Anniversary { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset? UpdatedAt { get; set; }
+        public Tier Tier { get; set; }
+        public Tier? OptionalTier { get; set; }
+        public decimal Price { get; set; }
+        public decimal? Discount { get; set; }
+        public Address NestedObject { get; set; } = new();
+        public IEnumerable<string> Tags { get; set; } = Array.Empty<string>();
+    }
+
+    private static (ObjectSchema<Atomics> schema, ObjectSchemaBuilder<Atomics> builder) AtomicSubject()
+    {
+        var schema = new ObjectSchema<Atomics>();
+        return (schema, new ObjectSchemaBuilder<Atomics>(schema));
+    }
+
+    [Fact]
+    public void AddAtomicProperties_registers_string()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties();
+
+        var name = Assert.Single(schema.Properties, p => p.Name == "Name");
+        Assert.IsType<StringSchema>(name.Schema);
+        Assert.True(name.Required);
+    }
+
+    [Fact]
+    public void AddAtomicProperties_registers_numeric_required_and_optional()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties();
+
+        var age = Assert.Single(schema.Properties, p => p.Name == "Age");
+        Assert.IsType<NumericSchema<int>>(age.Schema);
+        Assert.True(age.Required);
+
+        var optAge = Assert.Single(schema.Properties, p => p.Name == "OptionalAge");
+        Assert.IsType<NumericSchema<int>>(optAge.Schema);
+        Assert.False(optAge.Required);
+
+        var price = Assert.Single(schema.Properties, p => p.Name == "Price");
+        Assert.IsType<NumericSchema<decimal>>(price.Schema);
+        Assert.True(price.Required);
+
+        var discount = Assert.Single(schema.Properties, p => p.Name == "Discount");
+        Assert.IsType<NumericSchema<decimal>>(discount.Schema);
+        Assert.False(discount.Required);
+    }
+
+    [Fact]
+    public void AddAtomicProperties_registers_boolean_required_and_optional()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties();
+
+        var isActive = Assert.Single(schema.Properties, p => p.Name == "IsActive");
+        Assert.IsType<BooleanSchema>(isActive.Schema);
+        Assert.True(isActive.Required);
+
+        var isVerified = Assert.Single(schema.Properties, p => p.Name == "IsVerified");
+        Assert.IsType<BooleanSchema>(isVerified.Schema);
+        Assert.False(isVerified.Required);
+    }
+
+    [Fact]
+    public void AddAtomicProperties_registers_date_only_required_and_optional()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties();
+
+        var birthday = Assert.Single(schema.Properties, p => p.Name == "Birthday");
+        Assert.IsType<DateOnlySchema>(birthday.Schema);
+        Assert.True(birthday.Required);
+
+        var anniversary = Assert.Single(schema.Properties, p => p.Name == "Anniversary");
+        Assert.IsType<DateOnlySchema>(anniversary.Schema);
+        Assert.False(anniversary.Required);
+    }
+
+    [Fact]
+    public void AddAtomicProperties_registers_date_time_offset_required_and_optional()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties();
+
+        var createdAt = Assert.Single(schema.Properties, p => p.Name == "CreatedAt");
+        Assert.IsType<DateTimeOffsetSchema>(createdAt.Schema);
+        Assert.True(createdAt.Required);
+
+        var updatedAt = Assert.Single(schema.Properties, p => p.Name == "UpdatedAt");
+        Assert.IsType<DateTimeOffsetSchema>(updatedAt.Schema);
+        Assert.False(updatedAt.Required);
+    }
+
+    [Fact]
+    public void AddAtomicProperties_registers_enum_required_and_optional()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties();
+
+        var tier = Assert.Single(schema.Properties, p => p.Name == "Tier");
+        Assert.IsType<EnumSchema<Tier>>(tier.Schema);
+        Assert.True(tier.Required);
+
+        var optTier = Assert.Single(schema.Properties, p => p.Name == "OptionalTier");
+        Assert.IsType<EnumSchema<Tier>>(optTier.Schema);
+        Assert.False(optTier.Required);
+    }
+
+    [Fact]
+    public void AddAtomicProperties_skips_reference_and_collection_types()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties();
+
+        Assert.DoesNotContain(schema.Properties, p => p.Name == "NestedObject");
+        Assert.DoesNotContain(schema.Properties, p => p.Name == "Tags");
+    }
+
+    [Fact]
+    public void AddAtomicProperties_asRequired_true_marks_all_required()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties(asRequired: true);
+
+        Assert.All(schema.Properties, p => Assert.True(p.Required));
+    }
+
+    [Fact]
+    public void AddAtomicProperties_asRequired_false_marks_all_optional()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties(asRequired: false);
+
+        Assert.All(schema.Properties, p => Assert.False(p.Required));
+    }
+
+    [Fact]
+    public void AddAtomicProperties_returns_same_builder_for_chaining()
+    {
+        var (_, builder) = AtomicSubject();
+
+        Assert.Same(builder, builder.AddAtomicProperties());
+    }
+
+    [Fact]
+    public void AddAtomicProperties_can_be_followed_by_Remove()
+    {
+        var (schema, builder) = AtomicSubject();
+
+        builder.AddAtomicProperties().Remove(p => p.Age);
+
+        Assert.DoesNotContain(schema.Properties, p => p.Name == "Age");
+        Assert.Contains(schema.Properties, p => p.Name == "Name");
+    }
 }
