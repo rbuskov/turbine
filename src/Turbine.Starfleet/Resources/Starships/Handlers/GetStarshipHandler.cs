@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Turbine.Starfleet.Database;
 
 namespace Turbine.Starfleet.Resources.Starships.Handlers;
@@ -11,7 +12,11 @@ public class GetStarshipHandler(StarshipSchemas schemas, StarfleetDbContext db) 
 {
     public async Task<IResult> Get(string registry)
     {
-        var starship = await db.Starships.FindAsync(registry);
+        var starship = await db
+            .Starships
+            .Include(s => s.Deployments)
+            .ThenInclude(d => d.Mission)
+            .SingleOrDefaultAsync(s => s.Registry == registry);
         
         return starship == null
             ? TypedResults.NotFound()

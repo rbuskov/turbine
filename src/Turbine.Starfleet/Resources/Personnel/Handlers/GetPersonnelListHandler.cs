@@ -12,7 +12,11 @@ public class GetPersonnelListHandler(PersonnelSchemas schemas, StarfleetDbContex
 {
     public async Task<IResult> GetList()
     {
-        var personnel = await db.Personnel.AsNoTracking().ToListAsync();
+        var personnel = await db
+            .Personnel
+            .Include(p => p.AssignedShip)
+            .AsNoTracking()
+            .ToListAsync();
 
         return TypedResults.Ok(personnel.Select(p => schemas.Summary.ToJson(p)));
     }
