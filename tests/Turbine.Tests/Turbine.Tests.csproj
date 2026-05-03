@@ -25,4 +25,9 @@
         <ProjectReference Include="..\..\src\Turbine\Turbine.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Integration\" />
+      <Folder Include="Unit\" />
+    </ItemGroup>
+
 </Project>
