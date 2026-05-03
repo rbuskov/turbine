@@ -11,6 +11,12 @@ public class StringSchemaBuilder : SchemaBuilder<StringSchemaBuilder>
         Schema = schema;
     }
 
+    public override StringSchemaBuilder Nullable(bool? nullable)
+    {
+        Schema.Nullable = nullable;
+        return this;
+    }
+
     public StringSchemaBuilder MinLength(int minLength)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minLength);

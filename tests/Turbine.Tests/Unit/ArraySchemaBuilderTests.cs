@@ -86,6 +86,16 @@ public class ArraySchemaBuilderTests
     }
 
     [Fact]
+    public void Nullable_writes_to_schema()
+    {
+        var (schema, builder) = Subject();
+
+        builder.Nullable(true);
+
+        Assert.True(schema.Nullable);
+    }
+
+    [Fact]
     public void Later_call_overwrites_earlier_call()
     {
         var (schema, builder) = Subject();

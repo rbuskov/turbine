@@ -8,6 +8,7 @@ public class NumericSchema<TNumber> : IValueTypeSchema<TNumber>
 {
     internal NumericSchema() { }
 
+    public bool? Nullable { get; set; }
     public TNumber? Minimum { get; set; }
     public TNumber? ExclusiveMinimum { get; set; }
     public TNumber? Maximum { get; set; }

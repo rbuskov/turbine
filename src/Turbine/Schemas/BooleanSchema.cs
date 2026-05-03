@@ -6,6 +6,8 @@ public class BooleanSchema : IValueTypeSchema<bool>
 {
     internal BooleanSchema() { }
 
+    public bool? Nullable { get; set; }
+
     public bool FromJson(JsonElement json)
     {
         throw new NotImplementedException();

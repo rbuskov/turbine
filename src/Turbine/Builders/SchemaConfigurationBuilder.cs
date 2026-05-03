@@ -9,7 +9,7 @@ public class SchemaConfigurationBuilder
 
     public BooleanSchemaBuilder Schema(Expression<Func<BooleanSchema>> propertySelector, string? name = null)
     {
-        return new BooleanSchemaBuilder();
+        return new BooleanSchemaBuilder(new BooleanSchema());
     }
     
     public StringSchemaBuilder Schema(Expression<Func<StringSchema>> propertySelector, string? name = null)

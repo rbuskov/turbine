@@ -12,6 +12,12 @@ public class NumericSchemaBuilder<TNumber> : SchemaBuilder<NumericSchemaBuilder<
         Schema = schema;
     }
 
+    public override NumericSchemaBuilder<TNumber> Nullable(bool? nullable)
+    {
+        Schema.Nullable = nullable;
+        return this;
+    }
+
     public NumericSchemaBuilder<TNumber> Minimum(TNumber minimum)
     {
         Schema.Minimum = minimum;

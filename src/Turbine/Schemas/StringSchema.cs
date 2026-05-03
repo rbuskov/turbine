@@ -7,9 +7,10 @@ public class StringSchema : IValueTypeSchema<string>
 {
     internal StringSchema() { }
 
+    public bool? Nullable { get; set; }
     public int? MinLength { get; set; }
     public int? MaxLength { get; set; }
-    public string? Format { get; set; } 
+    public string? Format { get; set; }
     public Regex? Pattern { get; set; }
 
     public string FromJson(JsonElement json)

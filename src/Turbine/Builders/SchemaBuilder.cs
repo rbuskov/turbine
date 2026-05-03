@@ -5,7 +5,7 @@ public abstract class SchemaBuilder<TSelf>
 {
     internal SchemaBuilder() { }
 
-    public TSelf Nullable(bool? nullable)
+    public virtual TSelf Nullable(bool? nullable)
     {
         return (TSelf) this;
     }

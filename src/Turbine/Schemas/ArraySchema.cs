@@ -6,6 +6,7 @@ public class ArraySchema<TItem> : IReferenceTypeSchema<ICollection<TItem>>
 {
     internal ArraySchema() { }
 
+    public bool? Nullable { get; set; }
     public int? MinItems { get; set; }
     public int? MaxItems { get; set; }
 

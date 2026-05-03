@@ -9,6 +9,12 @@ public class ArraySchemaBuilder<TItem> : PropertySchemaBuilder<TItem, ArraySchem
         Schema = schema;
     }
 
+    public override ArraySchemaBuilder<TItem> Nullable(bool? nullable)
+    {
+        Schema.Nullable = nullable;
+        return this;
+    }
+
     public ArraySchemaBuilder<TItem> MinItems(int minItems)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minItems);
