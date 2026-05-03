@@ -32,6 +32,7 @@ public static class ServiceCollectionExtensions
             : assemblies;
 
         var set = TurbineConfigurationSet.GetOrAdd(services);
+        services.TryAddSingleton<TurbineSchemaRegistry>();
 
         foreach (var assembly in resolved)
         {
