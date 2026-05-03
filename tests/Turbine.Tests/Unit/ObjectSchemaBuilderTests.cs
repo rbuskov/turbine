@@ -231,4 +231,157 @@ public class ObjectSchemaBuilderTests
 
         Assert.Throws<ArgumentException>(() => builder.Add(p => p.Name + "!"));
     }
+
+    private sealed class Address
+    {
+        public string Street { get; set; } = "";
+        public string City { get; set; } = "";
+    }
+
+    private sealed class PersonWithAddress
+    {
+        public string Name { get; set; } = "";
+        public Address Home { get; set; } = new();
+        public IEnumerable<string> Tags { get; set; } = Array.Empty<string>();
+        public IEnumerable<Address> PreviousAddresses { get; set; } = Array.Empty<Address>();
+        public Animal Pet { get; set; } = new Dog();
+    }
+
+    private abstract class Animal
+    {
+        public string Name { get; set; } = "";
+    }
+
+    private sealed class Dog : Animal { }
+
+    private sealed class Cat : Animal { }
+
+    private static (ObjectSchema<PersonWithAddress> schema, ObjectSchemaBuilder<PersonWithAddress> builder) AddressSubject()
+    {
+        var schema = new ObjectSchema<PersonWithAddress>();
+        return (schema, new ObjectSchemaBuilder<PersonWithAddress>(schema));
+    }
+
+    [Fact]
+    public void AddObject_creates_nested_object_property()
+    {
+        var (schema, builder) = AddressSubject();
+
+        builder.AddObject(p => p.Home);
+
+        var property = Assert.Single(schema.Properties);
+        Assert.Equal("Home", property.Name);
+        Assert.IsType<ObjectSchema<Address>>(property.Schema);
+        Assert.True(property.Required);
+    }
+
+    [Fact]
+    public void AddObject_runs_nested_configure_callback()
+    {
+        var (schema, builder) = AddressSubject();
+
+        builder.AddObject(p => p.Home, schema: home =>
+        {
+            home.Add(a => a.Street);
+            home.Add(a => a.City);
+        });
+
+        var nested = Assert.IsType<ObjectSchema<Address>>(schema.Properties[0].Schema);
+        Assert.Equal(new[] { "Street", "City" }, nested.Properties.Select(p => p.Name).ToArray());
+    }
+
+    [Fact]
+    public void AddObject_explicit_name_overrides_selector()
+    {
+        var (schema, builder) = AddressSubject();
+
+        builder.AddObject(p => p.Home, name: "address");
+
+        Assert.Equal("address", schema.Properties[0].Name);
+    }
+
+    [Fact]
+    public void AddObject_can_override_required()
+    {
+        var (schema, builder) = AddressSubject();
+
+        builder.AddObject(p => p.Home, required: false);
+
+        Assert.False(schema.Properties[0].Required);
+    }
+
+    [Fact]
+    public void AddArray_creates_array_property()
+    {
+        var (schema, builder) = AddressSubject();
+
+        builder.AddArray(p => p.Tags);
+
+        var property = Assert.Single(schema.Properties);
+        Assert.Equal("Tags", property.Name);
+        Assert.IsType<ArraySchema<string>>(property.Schema);
+        Assert.True(property.Required);
+    }
+
+    [Fact]
+    public void AddArray_runs_item_schema_callback()
+    {
+        var (schema, builder) = AddressSubject();
+
+        builder.AddArray(p => p.Tags, itemSchema: items => items.MinItems(1).MaxItems(10));
+
+        var array = Assert.IsType<ArraySchema<string>>(schema.Properties[0].Schema);
+        Assert.Equal(1, array.MinItems);
+        Assert.Equal(10, array.MaxItems);
+    }
+
+    [Fact]
+    public void AddArray_with_complex_item_type()
+    {
+        var (schema, builder) = AddressSubject();
+
+        builder.AddArray(p => p.PreviousAddresses);
+
+        Assert.IsType<ArraySchema<Address>>(schema.Properties[0].Schema);
+    }
+
+    [Fact]
+    public void AddOneOf_creates_one_of_property()
+    {
+        var (schema, builder) = AddressSubject();
+
+        builder.AddOneOf(p => p.Pet);
+
+        var property = Assert.Single(schema.Properties);
+        Assert.Equal("Pet", property.Name);
+        Assert.IsType<OneOfSchema<Animal>>(property.Schema);
+        Assert.True(property.Required);
+    }
+
+    [Fact]
+    public void AddOneOf_runs_configure_callback()
+    {
+        var (schema, builder) = AddressSubject();
+
+        builder.AddOneOf(p => p.Pet, schema: o =>
+        {
+            o.Discriminator("kind");
+            o.AddMapping<Dog>(_ => { });
+            o.AddMapping<Cat>(_ => { });
+        });
+
+        var oneOf = Assert.IsType<OneOfSchema<Animal>>(schema.Properties[0].Schema);
+        Assert.Equal("kind", oneOf.Discriminator);
+        Assert.Equal(2, oneOf.Mappings.Count);
+    }
+
+    [Fact]
+    public void Reference_type_Adds_return_same_builder_for_chaining()
+    {
+        var (_, builder) = AddressSubject();
+
+        Assert.Same(builder, builder.AddObject(p => p.Home));
+        Assert.Same(builder, builder.AddArray(p => p.Tags));
+        Assert.Same(builder, builder.AddOneOf(p => p.Pet));
+    }
 }

@@ -39,7 +39,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<EnumSchemaBuilder<TEnum>>? schema = null)
         where TEnum : struct, Enum
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? true,
@@ -55,7 +55,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<BooleanSchemaBuilder>? schema = null)
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? true,
@@ -70,7 +70,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<BooleanSchemaBuilder>? schema = null)
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? false,
@@ -86,7 +86,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<DateTimeOffsetSchemaBuilder>? schema = null)
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? true,
@@ -101,7 +101,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<DateTimeOffsetSchemaBuilder>? schema = null)
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? false,
@@ -117,7 +117,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<DateOnlySchemaBuilder>? schema = null)
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? true,
@@ -132,7 +132,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<DateOnlySchemaBuilder>? schema = null)
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? false,
@@ -148,7 +148,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<StringSchemaBuilder>? schema = null)
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? true,
@@ -165,7 +165,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<NumericSchemaBuilder<TNumber>>? schema = null)
         where TNumber : struct, INumber<TNumber>
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? true,
@@ -181,7 +181,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         Action<NumericSchemaBuilder<TNumber>>? schema = null)
         where TNumber : struct, INumber<TNumber>
     {
-        return AddValueProperty(
+        return AddSchemaProperty(
             selector,
             name,
             required ?? false,
@@ -197,7 +197,13 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<ObjectSchemaBuilder<TProperty>>? schema = null)
     {
-        return (TSelf) this;
+        return AddSchemaProperty(
+            selector,
+            name,
+            required ?? true,
+            () => new ObjectSchema<TProperty>(),
+            s => new ObjectSchemaBuilder<TProperty>(s),
+            schema);
     }
 
     // Array
@@ -207,7 +213,13 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<ArraySchemaBuilder<TItem>>? itemSchema = null)
     {
-        return (TSelf) this;
+        return AddSchemaProperty(
+            selector,
+            name,
+            required ?? true,
+            () => new ArraySchema<TItem>(),
+            s => new ArraySchemaBuilder<TItem>(s),
+            itemSchema);
     }
 
     // OneOf
@@ -217,7 +229,13 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         bool? required = null,
         Action<OneOfSchemaBuilder<TBase>>? schema = null)
     {
-        return (TSelf) this;
+        return AddSchemaProperty(
+            selector,
+            name,
+            required ?? true,
+            () => new OneOfSchema<TBase>(),
+            s => new OneOfSchemaBuilder<TBase>(s),
+            schema);
     }
 
     // Custom boolean
@@ -280,7 +298,7 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
         return (TSelf) this;
     }
 
-    private TSelf AddValueProperty<TProperty, TSchema, TBuilder>(
+    private TSelf AddSchemaProperty<TProperty, TSchema, TBuilder>(
         Expression<Func<TDomain, TProperty>> selector,
         string? name,
         bool required,
