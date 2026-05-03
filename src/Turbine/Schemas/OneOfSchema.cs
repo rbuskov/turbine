@@ -10,7 +10,7 @@ public class OneOfSchema<TBase> : IReferenceTypeSchema<TBase>
 
     public string Discriminator { get; set; } = "Type";
 
-    public void AddSchema<TMap>(string type, ObjectSchema<TMap> schema) where TMap : TBase, new()
+    public void AddSchema<TMap>(string type, ObjectSchema<TMap> schema) where TMap : TBase
     {
         mappings.Add(type, schema);
     }
