@@ -384,4 +384,163 @@ public class ObjectSchemaBuilderTests
         Assert.Same(builder, builder.AddArray(p => p.Tags));
         Assert.Same(builder, builder.AddOneOf(p => p.Pet));
     }
+
+    private static ObjectSchema<Person> SourcePerson()
+    {
+        var source = new ObjectSchema<Person>();
+        var sourceBuilder = new ObjectSchemaBuilder<Person>(source);
+        sourceBuilder
+            .Add(p => p.Name)
+            .Add(p => p.Age)
+            .Add(p => p.IsActive, required: false);
+        return source;
+    }
+
+    [Fact]
+    public void AddPropertiesFrom_copies_each_property()
+    {
+        var source = SourcePerson();
+        var (schema, builder) = Subject();
+
+        builder.AddPropertiesFrom(() => source);
+
+        Assert.Equal(new[] { "Name", "Age", "IsActive" }, schema.Properties.Select(p => p.Name).ToArray());
+    }
+
+    [Fact]
+    public void AddPropertiesFrom_shares_inner_schema_references()
+    {
+        var source = SourcePerson();
+        var (schema, builder) = Subject();
+
+        builder.AddPropertiesFrom(() => source);
+
+        for (var i = 0; i < source.Properties.Count; i++)
+        {
+            Assert.Same(source.Properties[i].Schema, schema.Properties[i].Schema);
+        }
+    }
+
+    [Fact]
+    public void AddPropertiesFrom_preserves_required_by_default()
+    {
+        var source = SourcePerson();
+        var (schema, builder) = Subject();
+
+        builder.AddPropertiesFrom(() => source);
+
+        Assert.True(schema.Properties[0].Required);   // Name
+        Assert.True(schema.Properties[1].Required);   // Age
+        Assert.False(schema.Properties[2].Required);  // IsActive
+    }
+
+    [Fact]
+    public void AddPropertiesFrom_asRequired_true_marks_all_required()
+    {
+        var source = SourcePerson();
+        var (schema, builder) = Subject();
+
+        builder.AddPropertiesFrom(() => source, asRequired: true);
+
+        Assert.All(schema.Properties, p => Assert.True(p.Required));
+    }
+
+    [Fact]
+    public void AddPropertiesFrom_asRequired_false_marks_all_optional()
+    {
+        var source = SourcePerson();
+        var (schema, builder) = Subject();
+
+        builder.AddPropertiesFrom(() => source, asRequired: false);
+
+        Assert.All(schema.Properties, p => Assert.False(p.Required));
+    }
+
+    [Fact]
+    public void AddPropertiesFrom_does_not_modify_source()
+    {
+        var source = SourcePerson();
+        var (_, builder) = Subject();
+
+        builder.AddPropertiesFrom(() => source, asRequired: true);
+
+        Assert.False(source.Properties[2].Required);  // IsActive in source still optional
+    }
+
+    [Fact]
+    public void AddPropertiesFrom_returns_same_builder_for_chaining()
+    {
+        var source = SourcePerson();
+        var (_, builder) = Subject();
+
+        Assert.Same(builder, builder.AddPropertiesFrom(() => source));
+    }
+
+    [Fact]
+    public void AddPropertiesFrom_resolves_func_at_invocation_time()
+    {
+        var source = new ObjectSchema<Person>();
+        var (schema, builder) = Subject();
+
+        builder.AddPropertiesFrom(() => source);
+
+        // Func evaluated at AddPropertiesFrom call time — empty at that point.
+        Assert.Empty(schema.Properties);
+    }
+
+    [Fact]
+    public void Remove_by_selector_drops_existing_property()
+    {
+        var (schema, builder) = Subject();
+        builder.Add(p => p.Name).Add(p => p.Age);
+
+        builder.Remove(p => p.Age);
+
+        Assert.Single(schema.Properties);
+        Assert.Equal("Name", schema.Properties[0].Name);
+    }
+
+    [Fact]
+    public void Remove_by_selector_handles_value_type_via_nullable_lift()
+    {
+        var (schema, builder) = Subject();
+        builder.Add(p => p.IsActive);
+
+        builder.Remove(p => p.IsActive);
+
+        Assert.Empty(schema.Properties);
+    }
+
+    [Fact]
+    public void Remove_by_name_drops_existing_property()
+    {
+        var (schema, builder) = Subject();
+        builder.Add(p => p.Name).Add(p => p.Age);
+
+        builder.Remove("Name");
+
+        Assert.Single(schema.Properties);
+        Assert.Equal("Age", schema.Properties[0].Name);
+    }
+
+    [Fact]
+    public void Remove_unknown_property_is_no_op()
+    {
+        var (schema, builder) = Subject();
+        builder.Add(p => p.Name);
+
+        builder.Remove("DoesNotExist");
+
+        Assert.Single(schema.Properties);
+    }
+
+    [Fact]
+    public void Remove_returns_same_builder_for_chaining()
+    {
+        var (_, builder) = Subject();
+        builder.Add(p => p.Name);
+
+        Assert.Same(builder, builder.Remove(p => p.Name));
+        Assert.Same(builder, builder.Remove("Anything"));
+    }
 }

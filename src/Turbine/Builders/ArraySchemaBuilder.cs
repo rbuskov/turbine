@@ -22,6 +22,12 @@ public class ArraySchemaBuilder<TItem> : PropertySchemaBuilder<TItem, ArraySchem
             "Configure array bounds (MinItems / MaxItems) instead.");
     }
 
+    internal override void RemoveProperty(string propertyName)
+    {
+        throw new NotSupportedException(
+            "Removing item-shape properties on an ArraySchemaBuilder is not yet wired.");
+    }
+
     public ArraySchemaBuilder<TItem> MinItems(int minItems)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(minItems);

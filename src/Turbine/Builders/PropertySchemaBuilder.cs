@@ -11,8 +11,21 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
 
     internal abstract void AddProperty(ObjectProperty property);
 
+    internal abstract void RemoveProperty(string propertyName);
+
     public TSelf AddPropertiesFrom<TSource>(Func<ObjectSchema<TSource>> schema, bool? asRequired = null)
     {
+        ArgumentNullException.ThrowIfNull(schema);
+        var source = schema();
+        foreach (var property in source.Properties)
+        {
+            AddProperty(new ObjectProperty
+            {
+                Name = property.Name,
+                Schema = property.Schema,
+                Required = asRequired ?? property.Required,
+            });
+        }
         return (TSelf) this;
     }
 
@@ -23,11 +36,14 @@ public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSel
 
     public TSelf Remove<TProperty>(Expression<Func<TDomain, TProperty?>> selector)
     {
+        RemoveProperty(GetPropertyName(selector));
         return (TSelf) this;
     }
 
     public TSelf Remove(string propertyName)
     {
+        ArgumentNullException.ThrowIfNull(propertyName);
+        RemoveProperty(propertyName);
         return (TSelf) this;
     }
 
