@@ -4,6 +4,8 @@ namespace Turbine;
 
 public class StringSchemaBuilder : SchemaBuilder<StringSchemaBuilder>
 {
+    internal StringSchemaBuilder() { }
+
     public StringSchemaBuilder MinLength(int minLength)
     {
         return this;

@@ -6,6 +6,8 @@ namespace Turbine;
 public class NumericSchema<TNumber> : IValueTypeSchema<TNumber>
     where TNumber : struct, INumber<TNumber>
 {
+    internal NumericSchema() { }
+
     public TNumber? Minimum { get; set; }
     public TNumber? Maximum { get; set; }
     public TNumber? MultipleOf { get; set; }

@@ -4,6 +4,8 @@ namespace Turbine;
 
 public class DateTimeOffsetSchema : IValueTypeSchema<DateTimeOffset>
 {
+    internal DateTimeOffsetSchema() { }
+
     public DateTimeOffset FromJson(JsonElement json)
     {
         throw new NotImplementedException();

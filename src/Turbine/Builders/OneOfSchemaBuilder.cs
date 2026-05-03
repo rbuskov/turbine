@@ -3,6 +3,8 @@ namespace Turbine;
 
 public class OneOfSchemaBuilder<TBase>
 {
+    internal OneOfSchemaBuilder() { }
+
     public OneOfSchemaBuilder<TBase> Nullable(bool? nullable)
     {
         return this;

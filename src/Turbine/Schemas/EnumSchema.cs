@@ -2,9 +2,11 @@ using System.Text.Json;
 
 namespace Turbine;
 
-public class EnumSchema<TEnum> : IValueTypeSchema<TEnum> 
+public class EnumSchema<TEnum> : IValueTypeSchema<TEnum>
     where TEnum : struct, Enum
 {
+    internal EnumSchema() { }
+
     public TEnum FromJson(JsonElement json)
     {
         throw new NotImplementedException();

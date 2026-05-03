@@ -7,6 +7,8 @@ namespace Turbine;
 public abstract class PropertySchemaBuilder<TDomain, TSelf> : SchemaBuilder<TSelf>
     where TSelf : PropertySchemaBuilder<TDomain, TSelf>
 {
+    internal PropertySchemaBuilder() { }
+
     public TSelf AddPropertiesFrom<TSource>(Func<ObjectSchema<TSource>> schema, bool? asRequired = null)
     {
         return (TSelf) this;

@@ -5,6 +5,8 @@ namespace Turbine;
 
 public class SchemaConfigurator
 {
+    internal SchemaConfigurator() { }
+
     public BooleanSchemaBuilder Schema(Expression<Func<BooleanSchema>> propertySelector, string? name = null)
     {
         return new BooleanSchemaBuilder();

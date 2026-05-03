@@ -2,6 +2,8 @@ namespace Turbine;
 
 public class ArraySchemaBuilder<TItem> : PropertySchemaBuilder<TItem, ArraySchemaBuilder<TItem>>
 {
+    internal ArraySchemaBuilder() { }
+
     public ArraySchemaBuilder<TItem> MinItems(int minItems)
     {
         return this;

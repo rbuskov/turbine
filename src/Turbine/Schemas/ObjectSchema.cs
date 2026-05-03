@@ -4,6 +4,8 @@ namespace Turbine;
 
 public class ObjectSchema<TDomain> : IReferenceTypeSchema<TDomain>, IObjectSchema
 {
+    internal ObjectSchema() { }
+
     public IList<ObjectProperty> Properties { get; set; } = new List<ObjectProperty>();
     
     public TDomain FromJson(JsonElement json)

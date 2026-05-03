@@ -5,7 +5,9 @@ namespace Turbine;
 public class OneOfSchema<TBase> : IReferenceTypeSchema<TBase>
 {
     private readonly Dictionary<string, IObjectSchema> mappings = new();
-    
+
+    internal OneOfSchema() { }
+
     public string Discriminator { get; set; } = "Type";
 
     public void AddSchema<TMap>(string type, ObjectSchema<TMap> schema) where TMap : TBase, new()

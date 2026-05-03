@@ -4,6 +4,8 @@ namespace Turbine;
 
 public class DateOnlySchema : IValueTypeSchema<DateOnly>
 {
+    internal DateOnlySchema() { }
+
     public DateOnly FromJson(JsonElement json)
     {
         throw new NotImplementedException();

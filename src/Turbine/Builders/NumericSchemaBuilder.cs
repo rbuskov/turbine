@@ -5,6 +5,8 @@ namespace Turbine;
 public class NumericSchemaBuilder<TNumber> : SchemaBuilder<NumericSchemaBuilder<TNumber>>
     where TNumber : INumber<TNumber>
 {
+    internal NumericSchemaBuilder() { }
+
     public NumericSchemaBuilder<TNumber> Minimum(TNumber minimum)
     {
         return this;

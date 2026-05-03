@@ -5,6 +5,8 @@ namespace Turbine;
 
 public class StringSchema : IValueTypeSchema<string>
 {
+    internal StringSchema() { }
+
     public int? MinLength { get; set; }
     public int? MaxLength { get; set; }
     public string? Format { get; set; } 
