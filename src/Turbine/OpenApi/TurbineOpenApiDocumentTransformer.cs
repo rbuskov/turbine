@@ -28,14 +28,17 @@ internal sealed class TurbineOpenApiDocumentTransformer : IOpenApiDocumentTransf
 
         var ownedReverse = BuildReverseLookup(registry);
         var componentBuilder = new ComponentBuilder(document, registry, ownedReverse);
+        var displacedRefs = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var group in context.DescriptionGroups)
         {
             foreach (var description in group.Items)
             {
-                ApplyToOperation(document, description, componentBuilder);
+                ApplyToOperation(document, description, componentBuilder, displacedRefs);
             }
         }
+
+        PruneOrphanedDisplacedComponents(document, displacedRefs);
 
         return Task.CompletedTask;
     }
@@ -54,7 +57,8 @@ internal sealed class TurbineOpenApiDocumentTransformer : IOpenApiDocumentTransf
     private static void ApplyToOperation(
         OpenApiDocument document,
         ApiDescription description,
-        ComponentBuilder components)
+        ComponentBuilder components,
+        HashSet<string> displacedRefs)
     {
         var endpointMetadata = description.ActionDescriptor?.EndpointMetadata;
         if (endpointMetadata is null)
@@ -76,19 +80,50 @@ internal sealed class TurbineOpenApiDocumentTransformer : IOpenApiDocumentTransf
             return;
         }
 
+        var configuredStatuses = new HashSet<int>();
         foreach (var entry in turbineMetadata)
         {
             var reference = components.GetOrAddComponentRef(entry.ConfigurationType, entry.SchemaPropertyName);
             switch (entry.Role)
             {
                 case EndpointSchemaRole.Request:
-                    ApplyRequestBody(operation, entry, reference);
+                    ApplyRequestBody(operation, entry, reference, displacedRefs);
                     break;
                 case EndpointSchemaRole.Response:
                     ApplyResponse(operation, entry, reference);
+                    if (entry.StatusCode is { } status)
+                    {
+                        configuredStatuses.Add(status);
+                    }
                     break;
             }
         }
+
+        DropInferredEmpty200(operation, configuredStatuses);
+    }
+
+    private static void DropInferredEmpty200(OpenApiOperation operation, HashSet<int> configuredStatuses)
+    {
+        // ASP.NET's OpenAPI generator emits a default "200 OK" with no content for handlers
+        // that return Task<IResult>. When the user configured a different success status via
+        // .Produces(...) and never asked for 200, the inferred 200 is just noise — drop it.
+        if (configuredStatuses.Count == 0 || configuredStatuses.Contains(200))
+        {
+            return;
+        }
+        if (operation.Responses is null)
+        {
+            return;
+        }
+        if (!operation.Responses.TryGetValue("200", out var existing) || existing is not OpenApiResponse response)
+        {
+            return;
+        }
+        if (response.Content is { Count: > 0 })
+        {
+            return;
+        }
+        operation.Responses.Remove("200");
     }
 
     private static OpenApiOperation? FindOperation(OpenApiDocument document, ApiDescription description)
@@ -104,9 +139,24 @@ internal sealed class TurbineOpenApiDocumentTransformer : IOpenApiDocumentTransf
         {
             path = path[..queryIndex];
         }
+        // ApiDescription.RelativePath can carry a trailing slash for routes mapped
+        // through a group with an empty child pattern (e.g. MapGroup("x").MapGet("")).
+        // OpenApiDocument.Paths keys do not include the trailing slash, so try the
+        // trimmed form when the literal lookup misses.
         if (!document.Paths.TryGetValue(path, out var pathItem) || pathItem is null)
         {
-            return null;
+            if (path.Length > 1 && path.EndsWith('/'))
+            {
+                var trimmed = path.TrimEnd('/');
+                if (!document.Paths.TryGetValue(trimmed, out pathItem) || pathItem is null)
+                {
+                    return null;
+                }
+            }
+            else
+            {
+                return null;
+            }
         }
         if (description.HttpMethod is null)
         {
@@ -124,7 +174,8 @@ internal sealed class TurbineOpenApiDocumentTransformer : IOpenApiDocumentTransf
     private static void ApplyRequestBody(
         OpenApiOperation operation,
         TurbineEndpointSchemaMetadata entry,
-        IOpenApiSchema reference)
+        IOpenApiSchema reference,
+        HashSet<string> displacedRefs)
     {
         var body = operation.RequestBody as OpenApiRequestBody;
         if (body is null)
@@ -137,7 +188,138 @@ internal sealed class TurbineOpenApiDocumentTransformer : IOpenApiDocumentTransf
             operation.RequestBody = body;
         }
         body.Content ??= new Dictionary<string, OpenApiMediaType>(StringComparer.Ordinal);
+        if (body.Content.TryGetValue(entry.ContentType, out var existingMedia)
+            && existingMedia.Schema is OpenApiSchemaReference displaced
+            && displaced.Reference?.Id is { Length: > 0 } id)
+        {
+            displacedRefs.Add(id);
+        }
         body.Content[entry.ContentType] = new OpenApiMediaType { Schema = reference };
+    }
+
+    private static void PruneOrphanedDisplacedComponents(OpenApiDocument document, HashSet<string> displacedRefs)
+    {
+        if (displacedRefs.Count == 0 || document.Components?.Schemas is not { } schemas)
+        {
+            return;
+        }
+        var stillReferenced = CollectReferencedComponentIds(document);
+        foreach (var id in displacedRefs)
+        {
+            if (!stillReferenced.Contains(id))
+            {
+                schemas.Remove(id);
+            }
+        }
+    }
+
+    private static HashSet<string> CollectReferencedComponentIds(OpenApiDocument document)
+    {
+        var refs = new HashSet<string>(StringComparer.Ordinal);
+        if (document.Paths is null)
+        {
+            return refs;
+        }
+        foreach (var (_, pathItem) in document.Paths)
+        {
+            if (pathItem is not OpenApiPathItem concrete || concrete.Operations is null)
+            {
+                continue;
+            }
+            foreach (var (_, op) in concrete.Operations)
+            {
+                CollectFromOperation(op, refs);
+            }
+        }
+        if (document.Components?.Schemas is { } schemas)
+        {
+            foreach (var (_, schema) in schemas)
+            {
+                CollectFromSchema(schema, refs);
+            }
+        }
+        return refs;
+    }
+
+    private static void CollectFromOperation(OpenApiOperation operation, HashSet<string> refs)
+    {
+        if (operation.RequestBody is OpenApiRequestBody body && body.Content is not null)
+        {
+            foreach (var (_, media) in body.Content)
+            {
+                CollectFromSchema(media.Schema, refs);
+            }
+        }
+        if (operation.Responses is not null)
+        {
+            foreach (var (_, resp) in operation.Responses)
+            {
+                if (resp is OpenApiResponse r && r.Content is not null)
+                {
+                    foreach (var (_, media) in r.Content)
+                    {
+                        CollectFromSchema(media.Schema, refs);
+                    }
+                }
+            }
+        }
+        if (operation.Parameters is not null)
+        {
+            foreach (var p in operation.Parameters)
+            {
+                if (p is OpenApiParameter param)
+                {
+                    CollectFromSchema(param.Schema, refs);
+                }
+            }
+        }
+    }
+
+    private static void CollectFromSchema(IOpenApiSchema? schema, HashSet<string> refs)
+    {
+        switch (schema)
+        {
+            case null:
+                return;
+            case OpenApiSchemaReference reference when reference.Reference?.Id is { Length: > 0 } id:
+                if (refs.Add(id))
+                {
+                    // Also walk the referenced component itself.
+                    if (reference.Target is OpenApiSchema concrete)
+                    {
+                        WalkSchemaChildren(concrete, refs);
+                    }
+                }
+                return;
+            case OpenApiSchema concrete:
+                WalkSchemaChildren(concrete, refs);
+                return;
+        }
+    }
+
+    private static void WalkSchemaChildren(OpenApiSchema schema, HashSet<string> refs)
+    {
+        if (schema.Properties is not null)
+        {
+            foreach (var (_, child) in schema.Properties)
+            {
+                CollectFromSchema(child, refs);
+            }
+        }
+        CollectFromSchema(schema.Items, refs);
+        if (schema.AllOf is not null)
+        {
+            foreach (var s in schema.AllOf) CollectFromSchema(s, refs);
+        }
+        if (schema.OneOf is not null)
+        {
+            foreach (var s in schema.OneOf) CollectFromSchema(s, refs);
+        }
+        if (schema.AnyOf is not null)
+        {
+            foreach (var s in schema.AnyOf) CollectFromSchema(s, refs);
+        }
+        CollectFromSchema(schema.AdditionalProperties, refs);
     }
 
     private static void ApplyResponse(

@@ -21,21 +21,21 @@ public class TurbineSchemaComponentNamerTests
     public void Strips_trailing_Schemas_suffix()
     {
         var name = TurbineSchemaComponentNamer.GetComponentName(typeof(PersonnelSchemas), "Summary");
-        Assert.Equal("Personnel_Summary", name);
+        Assert.Equal("PersonnelSummary", name);
     }
 
     [Fact]
     public void Keeps_full_type_name_when_it_is_exactly_Schemas()
     {
         var name = TurbineSchemaComponentNamer.GetComponentName(typeof(Schemas), "Foo");
-        Assert.Equal("Schemas_Foo", name);
+        Assert.Equal("SchemasFoo", name);
     }
 
     [Fact]
     public void Leaves_type_without_suffix_alone()
     {
         var name = TurbineSchemaComponentNamer.GetComponentName(typeof(Inventory), "Item");
-        Assert.Equal("Inventory_Item", name);
+        Assert.Equal("InventoryItem", name);
     }
 
     [Fact]

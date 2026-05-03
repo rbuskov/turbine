@@ -18,6 +18,6 @@ public class GetPersonnelListHandler(PersonnelSchemas schemas, StarfleetDbContex
             .AsNoTracking()
             .ToListAsync();
 
-        return TypedResults.Ok(personnel.Select(p => schemas.Summary.ToJson(p)));
+        return TypedResults.Ok(schemas.Summary.ToJson(personnel));
     }
 }

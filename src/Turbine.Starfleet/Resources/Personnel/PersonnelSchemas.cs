@@ -8,22 +8,25 @@ namespace Turbine.Starfleet.Resources.Personnel;
 public class PersonnelSchemas : SchemaConfiguration
 {
     public OneOfSchema<Entities.Personnel> Details { get; set; } = null!;
-    public ObjectSchema<Entities.Personnel> Summary { get; set; } = null!;
+    public ArraySchema<Entities.Personnel> Summary { get; set; } = null!;
     public OneOfSchema<Entities.Personnel> Create { get; set; } = null!;
     public ObjectSchema<Entities.Personnel> CreateResult { get; set; } = null!;
     public OneOfSchema<Entities.Personnel> Update { get; set; } = null!;
     public OneOfSchema<Entities.Personnel> Patch { get; set; } = null!;
-    
+
+    private ObjectSchema<Entities.Personnel> SummaryItem { get; set; } = null!;
     private ObjectSchema<ServiceMember> ServiceMemberDetails { get; set; } = null!;
-    
+
     public override void Configure(SchemaConfigurationBuilder builder)
     {
-        builder.Schema(() => Summary)
+        builder.Schema(() => SummaryItem)
             .Add(p => p.Id)
             .Add(p => p.Name)
             .Add(p => p.EnteredServiceDate)
             .Add(p => p.AssignedShipRegistry!)
             .AddCustom("AssignedShipName", expr: p => p.AssignedShip?.Name);
+
+        builder.Schema(() => Summary).AddPropertiesFrom(() => SummaryItem);
 
         ConfigureDetails(builder);
 
@@ -54,7 +57,7 @@ public class PersonnelSchemas : SchemaConfiguration
     private void ConfigureDetails(SchemaConfigurationBuilder builder)
     {
         builder.Schema(() => ServiceMemberDetails)
-            .AddPropertiesFrom(() => Summary)
+            .AddPropertiesFrom(() => SummaryItem)
             .Add(s => s.SerialNumber)
             .AddArray(s => s.Commendations, itemSchema: s =>
             {
@@ -65,7 +68,7 @@ public class PersonnelSchemas : SchemaConfiguration
         builder.Schema(() => Details)
             .AddMapping<Civilian>(schema: cs =>
             {
-                cs.AddPropertiesFrom(() => Summary);
+                cs.AddPropertiesFrom(() => SummaryItem);
                 cs.Add(c => c.Role);
                 cs.Add(c => c.JoinedDate);
                 cs.AddObject(c => c.SponsoringOfficer, schema: os =>

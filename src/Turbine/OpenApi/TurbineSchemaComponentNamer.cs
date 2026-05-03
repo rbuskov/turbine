@@ -15,6 +15,6 @@ internal static class TurbineSchemaComponentNamer
         {
             name = name[..^SchemasSuffix.Length];
         }
-        return $"{name}_{schemaPropertyName}";
+        return $"{name}{schemaPropertyName}";
     }
 }

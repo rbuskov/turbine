@@ -22,22 +22,25 @@ public static class PersonnelEndpoints
 
         endpoints
             .MapPost("", async (
-                [FromBody] JsonElement body, 
+                [FromBody] JsonElement body,
                 [FromServices] ICreatePersonnelHandler handler) => await handler.Create(body))
+            .Accepts((PersonnelSchemas personnel) => personnel.Create)
             .Produces(201, (PersonnelSchemas personnel) => personnel.CreateResult);
-        
+
         endpoints
             .MapPut("{id}", async (
-                [FromRoute] string id, 
-                [FromBody] JsonElement body, 
+                [FromRoute] string id,
+                [FromBody] JsonElement body,
                 [FromServices] IUpdatePersonnelHandler handler) => await handler.Update(id, body))
+            .Accepts((PersonnelSchemas personnel) => personnel.Update)
             .Produces(204);
 
         endpoints
             .MapPatch("{id}", async (
-                [FromRoute] string id, 
-                [FromBody] JsonElement body, 
+                [FromRoute] string id,
+                [FromBody] JsonElement body,
                 [FromServices] IPatchPersonnelHandler handler) => await handler.Patch(id, body))
+            .Accepts((PersonnelSchemas personnel) => personnel.Patch)
             .Produces(204);
 
         endpoints

@@ -22,22 +22,25 @@ public static class StarshipEndpoints
 
         endpoints
             .MapPost("", async (
-                [FromBody] JsonElement body, 
+                [FromBody] JsonElement body,
                 [FromServices] ICreateStarshipHandler handler) => await handler.Create(body))
+            .Accepts((StarshipSchemas starship) => starship.Create)
             .Produces(201);
-        
+
         endpoints
             .MapPut("{registry}", async (
-                [FromRoute] string registry, 
-                [FromBody] JsonElement body, 
+                [FromRoute] string registry,
+                [FromBody] JsonElement body,
                 [FromServices] IUpdateStarshipHandler handler) => await handler.Update(registry, body))
+            .Accepts((StarshipSchemas starship) => starship.Update)
             .Produces(204);
 
         endpoints
             .MapPatch("{registry}", async (
-                [FromRoute] string registry, 
-                [FromBody] JsonElement body, 
+                [FromRoute] string registry,
+                [FromBody] JsonElement body,
                 [FromServices] IPatchStarshipHandler handler) => await handler.Patch(registry, body))
+            .Accepts((StarshipSchemas starship) => starship.Patch)
             .Produces(204);
         
         endpoints

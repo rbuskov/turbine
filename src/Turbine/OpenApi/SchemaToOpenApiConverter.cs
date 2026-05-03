@@ -237,6 +237,14 @@ internal sealed class SchemaToOpenApiConverter
             var key = (string) kvType.GetProperty("Key")!.GetValue(kvObj)!;
             var value = (IObjectSchema) kvType.GetProperty("Value")!.GetValue(kvObj)!;
             var nested = ResolveNested(value);
+            // The OpenAPI discriminator references a property that must exist on each
+            // variant. The Turbine schema model does not store that property explicitly
+            // (the value is implicit in the mapping key), so inject a const-typed string
+            // property into each inlined variant before adding it to the oneOf list.
+            if (nested is OpenApiSchema concreteVariant && !string.IsNullOrEmpty(discriminator))
+            {
+                InjectDiscriminatorProperty(concreteVariant, discriminator, key);
+            }
             result.OneOf.Add(nested);
             if (nested is OpenApiSchemaReference reference)
             {
@@ -251,6 +259,23 @@ internal sealed class SchemaToOpenApiConverter
         };
 
         return result;
+    }
+
+    private static void InjectDiscriminatorProperty(OpenApiSchema variant, string propertyName, string value)
+    {
+        variant.Properties ??= new Dictionary<string, IOpenApiSchema>(StringComparer.Ordinal);
+        if (variant.Properties.ContainsKey(propertyName))
+        {
+            return;
+        }
+        var literal = System.Text.Json.Nodes.JsonValue.Create(value)!;
+        variant.Properties[propertyName] = new OpenApiSchema
+        {
+            Type = JsonSchemaType.String,
+            Enum = new List<System.Text.Json.Nodes.JsonNode> { literal },
+        };
+        variant.Required ??= new HashSet<string>(StringComparer.Ordinal);
+        variant.Required.Add(propertyName);
     }
 
     private IOpenApiSchema ResolveNested(ISchema schema)

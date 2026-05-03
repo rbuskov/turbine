@@ -79,7 +79,7 @@ public class OpenApiTransformerTests
         });
 
         var components = doc.RootElement.GetProperty("components").GetProperty("schemas");
-        Assert.True(components.TryGetProperty("Fixture_Summary", out var summary));
+        Assert.True(components.TryGetProperty("FixtureSummary", out var summary));
         Assert.Equal("object", summary.GetProperty("type").GetString());
 
         var ref200 = doc.RootElement
@@ -93,7 +93,7 @@ public class OpenApiTransformerTests
             .GetProperty("schema")
             .GetProperty("$ref")
             .GetString();
-        Assert.Equal("#/components/schemas/Fixture_Summary", ref200);
+        Assert.Equal("#/components/schemas/FixtureSummary", ref200);
     }
 
     [Fact]
@@ -115,7 +115,7 @@ public class OpenApiTransformerTests
             .GetProperty("schema")
             .GetProperty("$ref")
             .GetString();
-        Assert.Equal("#/components/schemas/Fixture_CreateInput", refIn);
+        Assert.Equal("#/components/schemas/FixtureCreateInput", refIn);
     }
 
     [Fact]
@@ -133,12 +133,12 @@ public class OpenApiTransformerTests
         var requestRef = op.GetProperty("requestBody")
             .GetProperty("content").GetProperty("application/json")
             .GetProperty("schema").GetProperty("$ref").GetString();
-        Assert.Equal("#/components/schemas/Fixture_CreateInput", requestRef);
+        Assert.Equal("#/components/schemas/FixtureCreateInput", requestRef);
 
         var responseRef = op.GetProperty("responses").GetProperty("201")
             .GetProperty("content").GetProperty("application/json")
             .GetProperty("schema").GetProperty("$ref").GetString();
-        Assert.Equal("#/components/schemas/Fixture_CreateResult", responseRef);
+        Assert.Equal("#/components/schemas/FixtureCreateResult", responseRef);
     }
 
     [Fact]
@@ -153,11 +153,11 @@ public class OpenApiTransformerTests
         });
 
         var components = doc.RootElement.GetProperty("components").GetProperty("schemas");
-        Assert.True(components.TryGetProperty("Fixture_Summary", out _));
+        Assert.True(components.TryGetProperty("FixtureSummary", out _));
         var ids = new List<string>();
         foreach (var property in components.EnumerateObject())
         {
-            if (property.Name.EndsWith("_Summary", StringComparison.Ordinal))
+            if (property.Name.EndsWith("Summary", StringComparison.Ordinal))
             {
                 ids.Add(property.Name);
             }
@@ -181,7 +181,7 @@ public class OpenApiTransformerTests
         {
             foreach (var prop in schemas.EnumerateObject())
             {
-                if (prop.Name.StartsWith("Fixture_", StringComparison.Ordinal))
+                if (prop.Name.StartsWith("Fixture", StringComparison.Ordinal))
                 {
                     hasTurbineSchemas = true;
                 }
@@ -204,7 +204,37 @@ public class OpenApiTransformerTests
         Assert.True(responses.TryGetProperty("404", out var notFound));
         var refStr = notFound.GetProperty("content").GetProperty("application/json")
             .GetProperty("schema").GetProperty("$ref").GetString();
-        Assert.Equal("#/components/schemas/Fixture_Summary", refStr);
+        Assert.Equal("#/components/schemas/FixtureSummary", refStr);
+    }
+
+    [Fact]
+    public async Task MapGroup_with_empty_child_pattern_still_emits_response_schema()
+    {
+        // ApiDescription.RelativePath is "people/" for MapGroup("people").MapGet(""),
+        // but OpenApiDocument.Paths keys the operation as "/people". The transformer
+        // must handle the trailing-slash mismatch.
+        using var doc = await GetOpenApiDocument(app =>
+        {
+            var grp = app.MapGroup("people").WithTags("People");
+            grp.MapGet("", () => Array.Empty<Person>())
+                .Produces<FixtureSchemas>(200, x => x.Summary);
+            grp.MapPost("", (JsonElement body) => Results.Ok())
+                .Produces<FixtureSchemas>(201, x => x.CreateResult);
+        });
+
+        var listResp = doc.RootElement.GetProperty("paths")
+            .GetProperty("/people").GetProperty("get")
+            .GetProperty("responses").GetProperty("200")
+            .GetProperty("content").GetProperty("application/json")
+            .GetProperty("schema").GetProperty("$ref").GetString();
+        Assert.Equal("#/components/schemas/FixtureSummary", listResp);
+
+        var postResp = doc.RootElement.GetProperty("paths")
+            .GetProperty("/people").GetProperty("post")
+            .GetProperty("responses").GetProperty("201")
+            .GetProperty("content").GetProperty("application/json")
+            .GetProperty("schema").GetProperty("$ref").GetString();
+        Assert.Equal("#/components/schemas/FixtureCreateResult", postResp);
     }
 
     [Fact]
@@ -217,7 +247,7 @@ public class OpenApiTransformerTests
         });
 
         var component = doc.RootElement.GetProperty("components").GetProperty("schemas")
-            .GetProperty("Fixture_PetName");
+            .GetProperty("FixturePetName");
         Assert.Equal("string", component.GetProperty("type").GetString());
         Assert.Equal(1, component.GetProperty("minLength").GetInt32());
     }
