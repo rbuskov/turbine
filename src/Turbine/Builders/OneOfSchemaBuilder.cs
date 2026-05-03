@@ -34,6 +34,31 @@ public class OneOfSchemaBuilder<TBase>
 
     public OneOfSchemaBuilder<TBase> AddMappingsFrom<TSource>(Func<OneOfSchema<TSource>> schema, bool? asRequired = null)
     {
+        ArgumentNullException.ThrowIfNull(schema);
+        var source = schema();
+        foreach (var (type, mapping) in source.Mappings)
+        {
+            var entry = asRequired is null ? mapping : CopyWithRequired(mapping, asRequired.Value);
+            Schema.AddMapping(type, entry);
+        }
         return this;
+    }
+
+    private static IObjectSchema CopyWithRequired(IObjectSchema source, bool required)
+    {
+        var copy = (IObjectSchema) Activator.CreateInstance(source.GetType(), nonPublic: true)!;
+        foreach (var property in source.Properties)
+        {
+            copy.Properties.Add(new ObjectProperty
+            {
+                Name = property.Name,
+                Schema = property.Schema,
+                Required = required,
+                ValueExpression = property.ValueExpression,
+                ToJson = property.ToJson,
+                FromJson = property.FromJson,
+            });
+        }
+        return copy;
     }
 }

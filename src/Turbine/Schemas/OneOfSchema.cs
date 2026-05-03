@@ -19,6 +19,11 @@ public class OneOfSchema<TBase> : IReferenceTypeSchema<TBase>
         mappings.Add(type, schema);
     }
 
+    internal void AddMapping(string type, IObjectSchema schema)
+    {
+        mappings.Add(type, schema);
+    }
+
     public TBase FromJson(JsonElement json)
     {
         // Todo: Resolve schema from discriminator value in json
